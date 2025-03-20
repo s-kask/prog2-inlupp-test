@@ -17,3 +17,24 @@ mvn package -Dmaven.test.skip
 ```bash
 mvn compile test -pl backend
 ```
+
+## Importera i din editor
+
+### Intellij IDEA
+
+Välj File -> New -> Project From Version Control och skriv in https://-url:n
+till det här repot.
+
+![Intellij Idea import](assets/idea.png)
+
+Det finns tre bygg/kör alternativ. Klicka på dem för att köra projektet.
+
+### Visual Studio Code
+
+Klicka på Clone Repository och fyll i https://-url:n till det här repot.
+
+![Visual Studio Code import](assets/vscode.png)
+
+Kör genom att klicka på Terminal -> Run Build Task...
+
+Testa Inlupp 1 genom att klicka på test under Maven -> backend.
