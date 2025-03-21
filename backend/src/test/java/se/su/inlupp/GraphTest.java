@@ -1,43 +1,35 @@
 package se.su.inlupp;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.*;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class GraphTest {
+public class GraphTest {
   //
   private static final int MAJOR_VERSION = 2;
-  private static final int MINOR_VERSION = 3;
-  private static final String UPDATED_DATE = "2023-04-19";
+  private static final int MINOR_VERSION = 4;
+  private static final String UPDATED_DATE = "2025-03-21";
   //
-  private static final String ILLEGAL_STATE_EXCEPTION_BORDE_HA_KASTATS =
-      "Fel: undantaget IllegalStateException borde ha kastats.";
-  private static final String GET_NODES_INCORRECT_CONTENT =
-      "Fel: samlingen getNodes returnerar innehåller inte rätt noder.";
-  private static final String NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS =
-      "Fel: undantaget NoSuchElementException borde ha kastats.";
-  private static final String ILLEGAL_ARGUMENT_EXCEPTION_BORDE_HA_KASTATS =
-      "Fel: IllegalArgumentException borde ha kastats.";
+  private static final String ILLEGAL_STATE_EXCEPTION_BORDE_HA_KASTATS = "Fel: undantaget IllegalStateException borde ha kastats.";
+  private static final String GET_NODES_INCORRECT_CONTENT = "Fel: samlingen getNodes returnerar innehåller inte rätt noder.";
+  private static final String NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS = "Fel: undantaget NoSuchElementException borde ha kastats.";
+  private static final String ILLEGAL_ARGUMENT_EXCEPTION_BORDE_HA_KASTATS = "Fel: IllegalArgumentException borde ha kastats.";
   private static final String INVALID_NODE_1 = "ZZZZ";
   private static final String INVALID_NODE_2 = "YYYY";
-  private static final String INGET_UNDANTAG_BORDE_HA_KASTATS =
-      "Fel: borde inte ha kastat något undantag.";
+  private static final String INGET_UNDANTAG_BORDE_HA_KASTATS = "Fel: borde inte ha kastat något undantag.";
   private static final String ERROR_MISSING_EDGE = "Fel: bågen borde ha funnits.";
   private static final String ERROR_NONMISSING_EDGE = "Fel: bågen borde inte finnas.";
-  private static final String ERROR_NONMISSING_PATH =
-      "Fel: det borde inte ha funnits någon väg mellan noderna.";
+  private static final String ERROR_NONMISSING_PATH = "Fel: det borde inte ha funnits någon väg mellan noderna.";
   private static final String VALID_NODE_NOT_CONNECTED = "X";
   private static final String VALID_NODE_1 = "A";
   private static final String VALID_NODE_2 = "B";
   private static final String VALID_NODE_3 = "G";
-  private static final String[] STANDARD_NODES = {
-    VALID_NODE_1, VALID_NODE_2, "C", "D", "E", "F", VALID_NODE_3, "H", "I", "J", "X"
-  };
+  private static final String[] STANDARD_NODES = {VALID_NODE_1, VALID_NODE_2, "C", "D", "E", "F", VALID_NODE_3, "H", "I", "J", "X"};
 
   private final Graph<String> graph = new ListGraph<>();
 
@@ -61,27 +53,17 @@ class GraphTest {
 
   private void connect(String node1, String node2, String name, int cost) {
     graph.connect(node1, node2, name, cost);
-    assertNotNull(
-        graph.getEdgeBetween(node1, node2),
-        "Fel: försökte bekräfta connect med getEdgeBetween men det gick inte.");
-    assertEquals(
-        cost,
-        graph.getEdgeBetween(node1, node2).getWeight(),
-        "Fel: försökte bekräfta connect med getEdgeBetween men det gick inte.");
-    assertEquals(
-        cost,
-        graph.getEdgeBetween(node2, node1).getWeight(),
-        "Fel: försökte bekräfta connect med getEdgeBetween men det gick inte.");
+    assertNotNull(graph.getEdgeBetween(node1, node2), "Fel: försökte bekräfta connect med getEdgeBetween men det gick inte.");
+    assertEquals(cost, graph.getEdgeBetween(node1, node2).getWeight(), "Fel: försökte bekräfta connect med getEdgeBetween men det gick inte.");
+    assertEquals(cost, graph.getEdgeBetween(node2, node1).getWeight(), "Fel: försökte bekräfta connect med getEdgeBetween men det gick inte.");
   }
 
   private void createExampleGraph() {
     addExampleNodes();
 
-    //		connect(VALID_NODE_1, VALID_NODE_1, "A -> A", 1);
     connect("A", "G", "A -> G", 3);
     connect("G", "B", "G -> B", 28);
     connect("B", "F", "B -> F", 5);
-    //		connect("F", "F", "F -> F", 3);
     connect("F", "H", "F -> H", 1);
     connect("H", "D", "H -> D", 1);
     connect("H", "I", "H -> I", 3);
@@ -95,18 +77,18 @@ class GraphTest {
   }
 
   @BeforeEach
-  void setUp() {}
+  void setUp() {
+
+  }
 
   @Test
   @Order(10)
   @DisplayName("Testar att grafen är generisk och accepterar olika nodtyper.")
   void test00_genericGraphAcceptsDifferentNodeTypes() {
-    assertDoesNotThrow(
-        () -> {
-          Graph<Integer> integerGraph = new ListGraph<>();
-          Graph<Character> characterGraph = new ListGraph<>();
-        },
-        "Kunde inte skapa en graf med en generisk typ.");
+    assertDoesNotThrow(() -> {
+      Graph<Integer> integerGraph = new ListGraph<>();
+      Graph<Character> characterGraph = new ListGraph<>();
+    }, "Kunde inte skapa en graf med en generisk typ.");
   }
 
   @Test
@@ -122,9 +104,7 @@ class GraphTest {
   @DisplayName("Testar att lägga till noder med add.")
   void test01_add(String node) {
     graph.add(node);
-    assertTrue(
-        graph.getNodes().contains(node),
-        "Fel: samlingen som getNodes returnerar innehåller inte den nya noden.");
+    assertTrue(graph.getNodes().contains(node), "Fel: samlingen som getNodes returnerar innehåller inte den nya noden.");
   }
 
   @Test
@@ -134,38 +114,24 @@ class GraphTest {
 
     createExampleGraph();
 
-    assertNotNull(
-        graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3),
-        "Fel: grafen har inte en båge mellan noderna.");
+    assertNotNull(graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3), "Fel: grafen har inte en båge mellan noderna.");
 
-    assertTrue(
-        graph.getNodes().contains(VALID_NODE_3), "Fel: grafen innehåller inte noden innan remove.");
+    assertTrue(graph.getNodes().contains(VALID_NODE_3), "Fel: grafen innehåller inte noden innan remove.");
 
     graph.remove(VALID_NODE_3);
 
-    assertFalse(
-        graph.getNodes().contains(VALID_NODE_3),
-        "Fel: grafen innehåller fortfarande noden efter remove.");
+    assertFalse(graph.getNodes().contains(VALID_NODE_3), "Fel: grafen innehåller fortfarande noden efter remove.");
 
-    assertThrows(
-        NoSuchElementException.class, () -> graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3));
+    assertThrows(NoSuchElementException.class, () -> graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3));
 
-    assertEquals(
-        Optional.empty(),
-        graph.getEdgesFrom(VALID_NODE_1).stream()
-            .map(Edge<String>::getDestination)
-            .filter(d -> d.equals(VALID_NODE_3))
-            .findFirst());
+    assertEquals(Optional.empty(), graph.getEdgesFrom(VALID_NODE_1).stream().map(Edge<String>::getDestination).filter(d -> d.equals(VALID_NODE_3)).findFirst());
   }
 
   @Test
   @Order(42)
   @DisplayName("Testar att ta bort nod som inte finns.")
   void test04_remove_nonexisting_node() {
-    assertThrows(
-        NoSuchElementException.class,
-        () -> graph.remove(INVALID_NODE_1),
-        NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS);
+    assertThrows(NoSuchElementException.class, () -> graph.remove(INVALID_NODE_1), NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS);
   }
 
   @Test
@@ -175,6 +141,7 @@ class GraphTest {
     createExampleGraph();
 
     var nodes = graph.getNodes();
+
     assertTrue(nodes.containsAll(Arrays.asList(STANDARD_NODES)), GET_NODES_INCORRECT_CONTENT);
   }
 
@@ -184,10 +151,7 @@ class GraphTest {
   void test06_connect_existing_nodes_with_edge() {
     addExampleNodes();
     graph.connect(VALID_NODE_1, VALID_NODE_3, "A->G", 5);
-    assertThrows(
-        IllegalStateException.class,
-        () -> graph.connect(VALID_NODE_1, VALID_NODE_3, "A->G", 5),
-        ILLEGAL_STATE_EXCEPTION_BORDE_HA_KASTATS);
+    assertThrows(IllegalStateException.class, () -> graph.connect(VALID_NODE_1, VALID_NODE_3, "A->G", 5), ILLEGAL_STATE_EXCEPTION_BORDE_HA_KASTATS);
   }
 
   @Test
@@ -195,12 +159,9 @@ class GraphTest {
   @DisplayName("Testar connect med två noder som finns och inte har en båge.")
   void test06_connect_existing_nodes_without_edge() {
     addExampleNodes();
-    assertNull(
-        graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3),
-        "Fel: bågen borde inte ha funnits innan connect.");
+    assertNull(graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3), "Fel: bågen borde inte ha funnits innan connect.");
     graph.connect(VALID_NODE_1, VALID_NODE_3, "A->G", 5);
-    assertNotNull(
-        graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3), "Fel: bågen saknas efter connect.");
+    assertNotNull(graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3), "Fel: bågen saknas efter connect.");
   }
 
   @Test
@@ -208,10 +169,7 @@ class GraphTest {
   @DisplayName("Testar connect med negativ vikt.")
   void test06_connect_negative_weight() {
     addExampleNodes();
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> graph.connect(VALID_NODE_1, VALID_NODE_3, "A->G", -5),
-        ILLEGAL_ARGUMENT_EXCEPTION_BORDE_HA_KASTATS);
+    assertThrows(IllegalArgumentException.class, () -> graph.connect(VALID_NODE_1, VALID_NODE_3, "A->G", -5), ILLEGAL_ARGUMENT_EXCEPTION_BORDE_HA_KASTATS);
   }
 
   @Test
@@ -219,10 +177,7 @@ class GraphTest {
   @DisplayName("Testar connect med noder som inte finns.")
   void test06_connect_non_existing_nodes() {
     addExampleNodes();
-    assertThrows(
-        NoSuchElementException.class,
-        () -> graph.connect(INVALID_NODE_1, VALID_NODE_3, "ZZZZ->G", 5),
-        NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS);
+    assertThrows(NoSuchElementException.class, () -> graph.connect(INVALID_NODE_1, VALID_NODE_3, "ZZZZ->G", 5), NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS);
   }
 
   @Test
@@ -242,10 +197,7 @@ class GraphTest {
   @DisplayName("Testar disconnect av nod som inte finns.")
   void test07_disconnect_missing_node() {
     createExampleGraph();
-    assertThrows(
-        NoSuchElementException.class,
-        () -> graph.disconnect(INVALID_NODE_1, VALID_NODE_3),
-        NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS);
+    assertThrows(NoSuchElementException.class, () -> graph.disconnect(INVALID_NODE_1, VALID_NODE_3), NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS);
   }
 
   @Test
@@ -253,10 +205,7 @@ class GraphTest {
   @DisplayName("Testar disconnect av edge som inte finns.")
   void test07_disconnect_no_connection() {
     createExampleGraph();
-    assertThrows(
-        IllegalStateException.class,
-        () -> graph.disconnect(VALID_NODE_1, VALID_NODE_2),
-        ILLEGAL_STATE_EXCEPTION_BORDE_HA_KASTATS);
+    assertThrows(IllegalStateException.class, () -> graph.disconnect(VALID_NODE_1, VALID_NODE_2), ILLEGAL_STATE_EXCEPTION_BORDE_HA_KASTATS);
   }
 
   @Test
@@ -265,8 +214,7 @@ class GraphTest {
   void test08_getEdgeBetween_existing_edge() {
     createExampleGraph();
 
-    assertNotNull(
-        graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3), "Fel. Det borde ha funnits en båge.");
+    assertNotNull(graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3), "Fel. Det borde ha funnits en båge.");
     assertEquals("A -> G", graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3).getName());
   }
 
@@ -275,10 +223,7 @@ class GraphTest {
   @DisplayName("Testar getEdgeBetween när nod saknas.")
   void test08_getEdgeBetween_missing_node() {
     createExampleGraph();
-    assertThrows(
-        NoSuchElementException.class,
-        () -> graph.getEdgeBetween(VALID_NODE_1, INVALID_NODE_1),
-        NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS);
+    assertThrows(NoSuchElementException.class, () -> graph.getEdgeBetween(VALID_NODE_1, INVALID_NODE_1), NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS);
   }
 
   @Test
@@ -299,12 +244,8 @@ class GraphTest {
     assertEquals(2, actualEdges.size());
 
     var actualStrings = actualEdges.stream().map(Edge<String>::getName).collect(Collectors.toSet());
-    actualStrings.addAll(
-        actualEdges.stream().map(Edge<String>::getDestination).collect(Collectors.toSet()));
-    actualStrings.addAll(
-        actualEdges.stream()
-            .map(stringEdge -> String.valueOf(stringEdge.getWeight()))
-            .collect(Collectors.toSet()));
+    actualStrings.addAll(actualEdges.stream().map(Edge<String>::getDestination).collect(Collectors.toSet()));
+    actualStrings.addAll(actualEdges.stream().map(stringEdge -> String.valueOf(stringEdge.getWeight())).collect(Collectors.toSet()));
     actualStrings.add(VALID_NODE_3);
 
     var expectedStrings = new HashSet<>(Set.of(VALID_NODE_1, "B", VALID_NODE_3, "28", "3"));
@@ -329,10 +270,7 @@ class GraphTest {
   @Order(94)
   @DisplayName("Testar getEdgesFrom för nod som inte finns.")
   void test09_getEdgesFrom_non_existing_node() {
-    assertThrows(
-        NoSuchElementException.class,
-        () -> graph.getEdgesFrom(INVALID_NODE_1),
-        NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS);
+    assertThrows(NoSuchElementException.class, () -> graph.getEdgesFrom(INVALID_NODE_1), NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS);
   }
 
   @Test
@@ -359,18 +297,10 @@ class GraphTest {
   @DisplayName("Testar pathExists för noder som inte finns.")
   void test10_pathExists_non_existing_nodes() {
     createExampleGraph();
-    assertDoesNotThrow(
-        () -> graph.pathExists(INVALID_NODE_1, INVALID_NODE_2),
-        INGET_UNDANTAG_BORDE_HA_KASTATS + " (ogiltig1, ogiltig2)");
-    assertDoesNotThrow(
-        () -> graph.pathExists(VALID_NODE_1, INVALID_NODE_2),
-        INGET_UNDANTAG_BORDE_HA_KASTATS + " (giltig, ogiltig)");
-    assertDoesNotThrow(
-        () -> graph.pathExists(INVALID_NODE_1, VALID_NODE_1),
-        INGET_UNDANTAG_BORDE_HA_KASTATS + " (ogiltig, giltig)");
-    assertDoesNotThrow(
-        () -> graph.pathExists(INVALID_NODE_2, INVALID_NODE_1),
-        INGET_UNDANTAG_BORDE_HA_KASTATS + " (ogiltig2, ogiltig1)");
+    assertDoesNotThrow(() -> graph.pathExists(INVALID_NODE_1, INVALID_NODE_2), INGET_UNDANTAG_BORDE_HA_KASTATS + " (ogiltig1, ogiltig2)");
+    assertDoesNotThrow(() -> graph.pathExists(VALID_NODE_1, INVALID_NODE_2), INGET_UNDANTAG_BORDE_HA_KASTATS + " (giltig, ogiltig)");
+    assertDoesNotThrow(() -> graph.pathExists(INVALID_NODE_1, VALID_NODE_1), INGET_UNDANTAG_BORDE_HA_KASTATS + " (ogiltig, giltig)");
+    assertDoesNotThrow(() -> graph.pathExists(INVALID_NODE_2, INVALID_NODE_1), INGET_UNDANTAG_BORDE_HA_KASTATS + " (ogiltig2, ogiltig1)");
     assertFalse(graph.pathExists(INVALID_NODE_1, INVALID_NODE_2));
     assertFalse(graph.pathExists(VALID_NODE_1, INVALID_NODE_1));
     assertFalse(graph.pathExists(VALID_NODE_1, VALID_NODE_NOT_CONNECTED));
@@ -402,10 +332,7 @@ class GraphTest {
   @DisplayName("Testar setConnectionWeight för nod som inte finns.")
   void test12_setConnectionWeight_invalid_node() {
     createExampleGraph();
-    assertThrows(
-        NoSuchElementException.class,
-        () -> graph.setConnectionWeight(INVALID_NODE_1, VALID_NODE_3, 1),
-        NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS);
+    assertThrows(NoSuchElementException.class, () -> graph.setConnectionWeight(INVALID_NODE_1, VALID_NODE_3, 1), NO_SUCH_ELEMENT_EXCEPTION_BORDE_HA_KASTATS);
   }
 
   @Test
@@ -413,10 +340,7 @@ class GraphTest {
   @DisplayName("Testar setConnectionWeight med ogiltig vikt.")
   void test12_setConnectionWeight_invalid_weight() {
     createExampleGraph();
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> graph.setConnectionWeight(VALID_NODE_1, VALID_NODE_3, -1),
-        ILLEGAL_ARGUMENT_EXCEPTION_BORDE_HA_KASTATS);
+    assertThrows(IllegalArgumentException.class, () -> graph.setConnectionWeight(VALID_NODE_1, VALID_NODE_3, -1), ILLEGAL_ARGUMENT_EXCEPTION_BORDE_HA_KASTATS);
   }
 
   @Test
@@ -441,15 +365,12 @@ class GraphTest {
     assertEquals(22, edge2.getWeight(), "Fel: fel vikt efter setConnectionWeight. ( G -> A )");
 
     var validPath = graph.getPath(VALID_NODE_1, VALID_NODE_2);
-    Assumptions.assumingThat(
-        validPath != null,
-        () -> {
-          assert validPath != null;
-          var cost = validPath.stream().map(Edge<String>::getWeight).reduce(0, Integer::sum);
-          assertEquals(2, validPath.size(), "Fel: längd på path borde inte ha ändrats.");
-          assertEquals(
-              50, cost, "Fel: kostnad för path borde ha ändrats efter setConnectionWeight.");
-        });
+    Assumptions.assumingThat(validPath != null, () -> {
+      assert validPath != null;
+      var cost = validPath.stream().map(Edge<String>::getWeight).reduce(0, Integer::sum);
+      assertEquals(2, validPath.size(), "Fel: längd på path borde inte ha ändrats.");
+      assertEquals(50, cost, "Fel: kostnad för path borde ha ändrats efter setConnectionWeight.");
+    });
   }
 
   @Test
@@ -460,12 +381,7 @@ class GraphTest {
     var edge = graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3);
     var expected = "till G med A -> G tar 3";
     var actual = edge.toString().trim();
-    assertEquals(
-        expected,
-        actual,
-        String.format(
-            "Edge<String>::toString ser inte ut som förväntat. Borde ha varit:%n%s%nmen var:%n%s%n",
-            expected, actual));
+    assertEquals(expected, actual, String.format("Edge<String>::toString ser inte ut som förväntat. Borde ha varit:%n%s%nmen var:%n%s%n", expected, actual));
   }
 
   @Test
@@ -473,9 +389,7 @@ class GraphTest {
   @DisplayName("Testar Graph::toString.")
   void test14_graphToString() {
     createExampleGraph();
-    var message =
-        "Grafens toString saknar information.%nLetade efter följande ord:%n%s i"
-            + " strängen:%n%n%s%nmen något saknades.%n";
+    var message = "Grafens toString saknar information.%nLetade efter följande ord:%n%s i strängen:%n%n%s%nmen något saknades.%n";
 
     var edges = new HashSet<String>();
     for (String node : graph.getNodes()) {
@@ -491,13 +405,26 @@ class GraphTest {
     var containsNodes = nodes.stream().allMatch(toString::contains);
     var containsEdges = edges.stream().allMatch(toString::contains);
 
-    var missingEdges =
-        edges.stream().filter(s -> !toString.contains(s)).collect(Collectors.toSet());
+    var missingEdges = edges
+            .stream()
+            .filter(s -> !toString.contains(s))
+            .collect(Collectors.toSet());
 
-    if (!missingEdges.isEmpty()) fail("Någon båge saknas i toString: " + missingEdges);
+    if (!missingEdges.isEmpty())
+      fail("Någon båge saknas i toString: " + missingEdges);
 
     var all = new HashSet<>(nodes);
     all.addAll(edges);
     assertTrue(containsNodes && containsEdges, String.format(message, all, toString));
+  }
+
+  @Test
+  @Order(150)
+  @DisplayName("Testar setWeight på en Edge med en negativ vikt som parametervärde.")
+  void test15_edgeSetWeight() {
+    createExampleGraph();
+    var edge = graph.getEdgeBetween(VALID_NODE_1, VALID_NODE_3);
+
+    assertThrows(IllegalArgumentException.class, () -> edge.setWeight(-1), ILLEGAL_ARGUMENT_EXCEPTION_BORDE_HA_KASTATS);
   }
 }
