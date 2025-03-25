@@ -1,24 +1,27 @@
 # Template för PROG2 Inlupp 1 och 2
 
+## Instruktioner
+
+Instruktioner finns i iLearn
+
 ## Bygg och testa Inlupp 1 och kör Inlupp 2
 
 ```bash
-mvn package
+./mvnw package
 ```
 
-(eller `mvnw package`, eller `mwnw.bat package` om du har Windows, om du vill
-att Maven installeras automatiskt)
+(ersätt `./mvnw` med `mvnw.bat` på Windows`
 
 För att testa JavaFX innan Inlupp 1 är klar:
 
 ```bash
-mvn package -Dmaven.test.skip
+./mvnw package -Dmaven.test.skip
 ```
 
 ## Bygg och testa enbart Inlupp 1
 
 ```bash
-mvn compile test -pl backend
+./mvnw compile test -pl backend
 ```
 
 ## Importera i din editor
