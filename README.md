@@ -6,6 +6,9 @@
 mvn package
 ```
 
+(eller `mvnw package`, eller `mwnw.bat package` om du har Windows, om du vill
+att Maven installeras automatiskt)
+
 För att testa JavaFX innan Inlupp 1 är klar:
 
 ```bash
