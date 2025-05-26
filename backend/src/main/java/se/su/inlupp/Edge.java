@@ -33,6 +33,6 @@ public class Edge<N> {
 
   @Override
   public String toString() {
-    return "Destination: " + destination + ", Name: " + name + ", Weight: " + weight;
+    return "till " + destination + " med " + name + " tar " + weight;
   }
 }
