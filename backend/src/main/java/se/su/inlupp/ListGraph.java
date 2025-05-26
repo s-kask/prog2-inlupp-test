@@ -1,58 +1,47 @@
 package se.su.inlupp;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-public class ListGraph<T> implements Graph<T> {
+public class ListGraph<N> {
+  private Map<N, List<Edge<N>>> adjacencyList = new HashMap<>();
 
-  @Override
-  public void add(T node) {
-    throw new UnsupportedOperationException("Unimplemented method 'add'");
+
+  //Om nod redan finns gör inget annar lägg till ny nod
+  public void add(N node) {
+    if (!adjacencyList.containsKey(node)) {
+      adjacencyList.put(node, new ArrayList<>());
+    }
   }
 
-  @Override
-  public void connect(T node1, T node2, String name, int weight) {
-    throw new UnsupportedOperationException("Unimplemented method 'connect'");
+  //Om nod inte finns printa att den inte finns, annars tar bort noden TODO: Implementera så att den också tar bort förbinndelser
+  public void remove(N node) {
+    if (!adjacencyList.containsKey(node)) {
+      throw new NoSuchElementException("Noden finns inte i grafen" + node);
+    }
+    adjacencyList.remove(node);
   }
 
-  @Override
-  public void setConnectionWeight(T node1, T node2, int weight) {
-    throw new UnsupportedOperationException("Unimplemented method 'setConnectionWeight'");
-  }
+  public void connect(N node1, N node2, String name, int weigth) {
+    //kolla att noderna finns
+    if (!adjacencyList.containsKey(node1) || !adjacencyList.containsKey(node2)) {
+      throw new NoSuchElementException("En eller båda noderna saknas.");
+    }
 
-  @Override
-  public Set<T> getNodes() {
-    throw new UnsupportedOperationException("Unimplemented method 'getNodes'");
-  }
+    //kolla så att vikt inte är negativ
+    if (weigth < 0) {
+      throw new IllegalArgumentException("Vikt negativ.");
+    }
 
-  @Override
-  public Collection<Edge<T>> getEdgesFrom(T node) {
-    throw new UnsupportedOperationException("Unimplemented method 'getEdgesFrom'");
-  }
+    //kolla så att det inte finns redan existerande kant
+    List<Edge<N>> edgesNode1 = adjacencyList.get(node1);
+    for (Edge<N> edge : edgesNode1) {
+      if (edge.getDestination().equals(node2)) {
+        throw new IllegalStateException("Kant finns redan mellan dessa noder.");
+      }
+    }
 
-  @Override
-  public Edge<T> getEdgeBetween(T node1, T node2) {
-    throw new UnsupportedOperationException("Unimplemented method 'getEdgeBetween'");
-  }
-
-  @Override
-  public void disconnect(T node1, T node2) {
-    throw new UnsupportedOperationException("Unimplemented method 'disconnect'");
-  }
-
-  @Override
-  public void remove(T node) {
-    throw new UnsupportedOperationException("Unimplemented method 'remove'");
-  }
-
-  @Override
-  public boolean pathExists(T from, T to) {
-    throw new UnsupportedOperationException("Unimplemented method 'pathExists'");
-  }
-
-  @Override
-  public List<Edge<T>> getPath(T from, T to) {
-    throw new UnsupportedOperationException("Unimplemented method 'getPath'");
+    //lägger till och skapar kanterna
+    edgesNode1.add(new Edge<>(node2, name, weigth));
+    adjacencyList.get(node2).add(new Edge<>(node1, name, weigth));
   }
 }
