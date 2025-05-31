@@ -28,8 +28,10 @@ public class Gui extends Application {
 
     // Knapp för att skapa ny plats
     Button newPlaceButton = new Button("New Place");
+    // knapp för skapa connection mellan två platser
+    Button newConnectionButton = new Button("New Connection");
 
-    HBox buttonRow = new HBox(10, newPlaceButton);
+    HBox buttonRow = new HBox(10, newPlaceButton, newConnectionButton);
     buttonRow.setAlignment(Pos.CENTER);
 
     // Karta-panel (bakgrundsarea för platserna)
@@ -44,6 +46,65 @@ public class Gui extends Application {
       addingNewPlace = true;
       mapPane.setCursor(Cursor.CROSSHAIR);
       newPlaceButton.setDisable(true);
+    });
+
+    newConnectionButton.setOnAction(e -> {
+      if (selectedPlaces.size() != 2) {
+        showAlert("Fel", "Du måste markera exakt två platser.");
+        return;
+      }
+
+      PlaceView from = selectedPlaces.get(0);
+      PlaceView to = selectedPlaces.get(1);
+
+      if (from.name.equals(to.name)) {
+        showAlert("Fel", "En plats kan inte kopplas till sig själv.");
+        return;
+      }
+
+      // Dialog för namn på förbindelsen
+      TextInputDialog nameDialog = new TextInputDialog();
+      nameDialog.setTitle("Ny Förbindelse");
+      nameDialog.setHeaderText("Ange namn på förbindelsen:");
+      nameDialog.setContentText("Namn:");
+
+      String connectionName = nameDialog.showAndWait().orElse("").trim();
+      if (connectionName.isEmpty()) {
+        showAlert("Fel", "Förbindelsen måste ha ett namn.");
+        return;
+      }
+
+      // Dialog för tid
+      TextInputDialog timeDialog = new TextInputDialog();
+      timeDialog.setTitle("Restid");
+      timeDialog.setHeaderText("Hur lång tid tar förbindelsen?");
+      timeDialog.setContentText("Tid (heltal):");
+
+      String timeStr = timeDialog.showAndWait().orElse("").trim();
+      int time;
+
+      try {
+        time = Integer.parseInt(timeStr);
+        if (time < 0) throw new NumberFormatException();
+      } catch (NumberFormatException ex) {
+        showAlert("Fel", "Restiden måste vara ett positivt heltal.");
+        return;
+      }
+
+      try {
+        // Lägg till i grafen
+        graph.connect(from.name, to.name, connectionName, time);
+
+        // Rita linje
+        javafx.scene.shape.Line line = new javafx.scene.shape.Line(from.x, from.y, to.x, to.y);
+        line.setStrokeWidth(2);
+        mapPane.getChildren().add(line);
+
+      } catch (IllegalStateException ex) {
+        showAlert("Fel", "Det finns redan en förbindelse mellan dessa platser.");
+      } catch (Exception ex) {
+        showAlert("Fel", "Något gick fel: " + ex.getMessage());
+      }
     });
 
     // Klick på kartan
@@ -87,6 +148,14 @@ public class Gui extends Application {
     stage.setTitle("Map Application");
     stage.setScene(scene);
     stage.show();
+  }
+
+  private void showAlert(String title, String message) {
+    Alert alert = new Alert(Alert.AlertType.ERROR);
+    alert.setTitle(title);
+    alert.setHeaderText(null);
+    alert.setContentText(message);
+    alert.showAndWait();
   }
 
   // Hanterar klick på en plats: markerar eller avmarkerar.
