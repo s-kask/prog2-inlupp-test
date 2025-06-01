@@ -6,14 +6,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.scene.Cursor;
 import javafx.scene.control.Tooltip;
-import javafx.scene.shape.Circle;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class Gui extends Application {
 
@@ -30,8 +29,9 @@ public class Gui extends Application {
     Button newPlaceButton = new Button("New Place");
     // knapp för skapa connection mellan två platser
     Button newConnectionButton = new Button("New Connection");
+    Button showConnectionButton = new Button("Show Connection");
 
-    HBox buttonRow = new HBox(10, newPlaceButton, newConnectionButton);
+    HBox buttonRow = new HBox(10, newPlaceButton, newConnectionButton, showConnectionButton);
     buttonRow.setAlignment(Pos.CENTER);
 
     // Karta-panel (bakgrundsarea för platserna)
@@ -50,7 +50,7 @@ public class Gui extends Application {
 
     newConnectionButton.setOnAction(e -> {
       if (selectedPlaces.size() != 2) {
-        showAlert("Fel", "Du måste markera exakt två platser.");
+        showAlert("Du måste markera exakt två platser.");
         return;
       }
 
@@ -58,7 +58,7 @@ public class Gui extends Application {
       PlaceView to = selectedPlaces.get(1);
 
       if (from.name.equals(to.name)) {
-        showAlert("Fel", "En plats kan inte kopplas till sig själv.");
+        showAlert("En plats kan inte kopplas till sig själv.");
         return;
       }
 
@@ -70,7 +70,7 @@ public class Gui extends Application {
 
       String connectionName = nameDialog.showAndWait().orElse("").trim();
       if (connectionName.isEmpty()) {
-        showAlert("Fel", "Förbindelsen måste ha ett namn.");
+        showAlert("Förbindelsen måste ha ett namn.");
         return;
       }
 
@@ -87,7 +87,7 @@ public class Gui extends Application {
         time = Integer.parseInt(timeStr);
         if (time < 0) throw new NumberFormatException();
       } catch (NumberFormatException ex) {
-        showAlert("Fel", "Restiden måste vara ett positivt heltal.");
+        showAlert("Restiden måste vara ett positivt heltal.");
         return;
       }
 
@@ -101,9 +101,41 @@ public class Gui extends Application {
         mapPane.getChildren().add(line);
 
       } catch (IllegalStateException ex) {
-        showAlert("Fel", "Det finns redan en förbindelse mellan dessa platser.");
+        showAlert("Det finns redan en förbindelse mellan dessa platser.");
       } catch (Exception ex) {
-        showAlert("Fel", "Något gick fel: " + ex.getMessage());
+        showAlert("Något gick fel: " + ex.getMessage());
+      }
+    });
+
+    showConnectionButton.setOnAction(e -> {
+      if (selectedPlaces.size() != 2) {
+        showAlert("Fel: Du måste markera exakt två platser.");
+        return;
+      }
+
+      PlaceView from = selectedPlaces.get(0);
+      PlaceView to = selectedPlaces.get(1);
+
+      try {
+        Edge<String> edge = graph.getEdgeBetween(from.name, to.name);
+
+        if (edge == null) {
+          showAlert("Fel: Det finns ingen förbindelse mellan dessa två platser.");
+          return;
+        }
+
+        // Visa information i dialog
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setTitle("Förbindelseinformation");
+        info.setHeaderText("Förbindelse mellan " + from.name + " och " + to.name);
+        info.setContentText(
+                "Namn: " + edge.getName() + "\n" +
+                        "Tid: " + edge.getWeight() + " enheter"
+        );
+        info.showAndWait();
+
+      } catch (NoSuchElementException ex) {
+        showAlert("Fel: En av platserna finns inte längre.");
       }
     });
 
@@ -150,9 +182,9 @@ public class Gui extends Application {
     stage.show();
   }
 
-  private void showAlert(String title, String message) {
+  private void showAlert(String message) {
     Alert alert = new Alert(Alert.AlertType.ERROR);
-    alert.setTitle(title);
+    alert.setTitle("Fel");
     alert.setHeaderText(null);
     alert.setContentText(message);
     alert.showAndWait();
