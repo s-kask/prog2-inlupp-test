@@ -30,8 +30,9 @@ public class Gui extends Application {
     // knapp för skapa connection mellan två platser
     Button newConnectionButton = new Button("New Connection");
     Button showConnectionButton = new Button("Show Connection");
+    Button changeConnectionButton = new Button("Change Connection");
 
-    HBox buttonRow = new HBox(10, newPlaceButton, newConnectionButton, showConnectionButton);
+    HBox buttonRow = new HBox(10, newPlaceButton, newConnectionButton, showConnectionButton, changeConnectionButton);
     buttonRow.setAlignment(Pos.CENTER);
 
     // Karta-panel (bakgrundsarea för platserna)
@@ -50,7 +51,7 @@ public class Gui extends Application {
 
     newConnectionButton.setOnAction(e -> {
       if (selectedPlaces.size() != 2) {
-        showAlert("Du måste markera exakt två platser.");
+        showAlert("Fel","Du måste markera exakt två platser.");
         return;
       }
 
@@ -58,7 +59,7 @@ public class Gui extends Application {
       PlaceView to = selectedPlaces.get(1);
 
       if (from.name.equals(to.name)) {
-        showAlert("En plats kan inte kopplas till sig själv.");
+        showAlert("Fel","En plats kan inte kopplas till sig själv.");
         return;
       }
 
@@ -70,7 +71,7 @@ public class Gui extends Application {
 
       String connectionName = nameDialog.showAndWait().orElse("").trim();
       if (connectionName.isEmpty()) {
-        showAlert("Förbindelsen måste ha ett namn.");
+        showAlert("Fel","Förbindelsen måste ha ett namn.");
         return;
       }
 
@@ -87,7 +88,7 @@ public class Gui extends Application {
         time = Integer.parseInt(timeStr);
         if (time < 0) throw new NumberFormatException();
       } catch (NumberFormatException ex) {
-        showAlert("Restiden måste vara ett positivt heltal.");
+        showAlert("Fel","Restiden måste vara ett positivt heltal.");
         return;
       }
 
@@ -101,15 +102,15 @@ public class Gui extends Application {
         mapPane.getChildren().add(line);
 
       } catch (IllegalStateException ex) {
-        showAlert("Det finns redan en förbindelse mellan dessa platser.");
+        showAlert("Fel","Det finns redan en förbindelse mellan dessa platser.");
       } catch (Exception ex) {
-        showAlert("Något gick fel: " + ex.getMessage());
+        showAlert("Något gick fel: ", ex.getMessage());
       }
     });
 
     showConnectionButton.setOnAction(e -> {
       if (selectedPlaces.size() != 2) {
-        showAlert("Fel: Du måste markera exakt två platser.");
+        showAlert("Fel","Du måste markera exakt två platser.");
         return;
       }
 
@@ -120,7 +121,7 @@ public class Gui extends Application {
         Edge<String> edge = graph.getEdgeBetween(from.name, to.name);
 
         if (edge == null) {
-          showAlert("Fel: Det finns ingen förbindelse mellan dessa två platser.");
+          showAlert("Fel", "Det finns ingen förbindelse mellan dessa två platser.");
           return;
         }
 
@@ -135,7 +136,65 @@ public class Gui extends Application {
         info.showAndWait();
 
       } catch (NoSuchElementException ex) {
-        showAlert("Fel: En av platserna finns inte längre.");
+        showAlert("Fel", "En av platserna finns inte längre.");
+      }
+    });
+
+    changeConnectionButton.setOnAction(e -> {
+      if (selectedPlaces.size() != 2) {
+        showAlert("Fel", "Du måste markera exakt två platser.");
+        return;
+      }
+
+      PlaceView from = selectedPlaces.get(0);
+      PlaceView to = selectedPlaces.get(1);
+
+      try {
+        Edge<String> edge = graph.getEdgeBetween(from.name, to.name);
+
+        if (edge == null) {
+          showAlert("Fel", "Det finns ingen förbindelse mellan dessa två platser.");
+          return;
+        }
+
+        // Skapa fält: namn (icke-redigerbart), ny tid (redigerbart)
+        TextField nameField = new TextField(edge.getName());
+        nameField.setEditable(false);
+
+        TextField timeField = new TextField();
+        timeField.setPromptText("Ny tid");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.add(new Label("Namn:"), 0, 0);
+        grid.add(nameField, 1, 0);
+        grid.add(new Label("Tid:"), 0, 1);
+        grid.add(timeField, 1, 1);
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Ändra Förbindelse");
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(result -> {
+          if (result == ButtonType.OK) {
+            try {
+              int newTime = Integer.parseInt(timeField.getText().trim());
+              if (newTime < 0) throw new NumberFormatException();
+
+              graph.setConnectionWeight(from.name, to.name, newTime);
+
+            } catch (NumberFormatException ex) {
+              showAlert("Fel", "Tiden måste vara ett positivt heltal.");
+            } catch (Exception ex) {
+              showAlert("Fel", ex.getMessage());
+            }
+          }
+        });
+
+      } catch (NoSuchElementException ex) {
+        showAlert("Fel", "En av platserna finns inte längre.");
       }
     });
 
@@ -182,7 +241,7 @@ public class Gui extends Application {
     stage.show();
   }
 
-  private void showAlert(String message) {
+  private void showAlert(String title, String message) {
     Alert alert = new Alert(Alert.AlertType.ERROR);
     alert.setTitle("Fel");
     alert.setHeaderText(null);
