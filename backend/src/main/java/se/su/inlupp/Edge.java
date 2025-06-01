@@ -1,6 +1,5 @@
 package se.su.inlupp;
 
-
 public class Edge<N> {
   private final N destination;
   private final String name;
