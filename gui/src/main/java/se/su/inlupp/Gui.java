@@ -1,6 +1,11 @@
 package se.su.inlupp;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.imageio.ImageIO;
 
 import javafx.application.Application;
 import javafx.geometry.Pos;
@@ -30,6 +35,7 @@ public class Gui extends Application {
     Scene scene = new Scene(root, 640, 480);
 
     Menu fileMenu = new Menu("File");
+    AtomicReference<File> mapFile = new AtomicReference<>(null);
 
     MenuItem newMapItem = new MenuItem("New Map");
     newMapItem.setOnAction(e -> {
@@ -40,6 +46,7 @@ public class Gui extends Application {
           new ExtensionFilter("All Files", "*.*"));
       File selectedFile = fileChooser.showOpenDialog(stage);
       if (selectedFile != null) {
+        mapFile.set(selectedFile);
         String url = selectedFile.toURI().toString();
         Image image = new Image(url);
         double width = image.getWidth();
@@ -91,7 +98,33 @@ public class Gui extends Application {
 
     MenuItem saveImageItem = new MenuItem("Save Image");
     saveImageItem.setOnAction(e -> {
-      System.out.println("Save Image dialog!");
+      if (mapFile.get() == null) {
+        System.err.println("No map image to save.");
+        return;
+      }
+
+      BufferedImage image = null;
+
+      try {
+        image = ImageIO.read(mapFile.get());
+      } catch (Exception ex) {
+        System.err.println("Error loading image: " + ex.getMessage());
+      }
+
+      Graphics2D g2d = image.createGraphics();
+      // TODO: Draw the graph on the image
+      g2d.setColor(java.awt.Color.RED);
+      int radius = 5;
+      g2d.fillOval(100 - radius, 100 - radius, radius * 2, radius * 2);
+      g2d.dispose();
+
+      try {
+        String currentDir = System.getProperty("user.dir");
+        File output = new File(currentDir, "capture.png");
+        ImageIO.write(image, "png", output);
+      } catch (Exception ex) {
+        System.err.println("Error saving image: " + ex.getMessage());
+      }
     });
     fileMenu.getItems().add(saveImageItem);
 
