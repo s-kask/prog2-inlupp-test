@@ -56,6 +56,7 @@ public class Gui extends Application {
 
     MenuItem openItem = new MenuItem("Open");
     openItem.setOnAction(e -> {
+      // TODO: If a map is already open, prompt to save changes
       FileChooser fileChooser = new FileChooser();
       fileChooser.setTitle("Open Graph");
       fileChooser.getExtensionFilters().addAll(
