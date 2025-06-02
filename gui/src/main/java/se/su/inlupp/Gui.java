@@ -124,6 +124,7 @@ public class Gui extends Application {
 
       try {
         String currentDir = System.getProperty("user.dir");
+        currentDir = new File(currentDir).getParent();
         File output = new File(currentDir, "capture.png");
         ImageIO.write(image, "png", output);
       } catch (Exception ex) {
