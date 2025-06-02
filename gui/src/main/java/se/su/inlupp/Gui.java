@@ -3,6 +3,7 @@ package se.su.inlupp;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileReader;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.imageio.ImageIO;
@@ -76,6 +77,23 @@ public class Gui extends Application {
       File selectedFile = fileChooser.showOpenDialog(stage);
       if (selectedFile != null) {
         // TODO: Load the graph from the selected file
+        FileReader reader = null;
+        try {
+          reader = new FileReader(selectedFile);
+          // TODO: Parse the graph from the file
+          // graph.loadFromFile(reader);
+          hasUnsavedChanges = false; // Reset unsaved changes flag
+        } catch (Exception ex) {
+          System.err.println("Error loading graph: " + ex.getMessage());
+        } finally {
+          if (reader != null) {
+            try {
+              reader.close();
+            } catch (Exception ex) {
+              System.err.println("Error closing file: " + ex.getMessage());
+            }
+          }
+        }
       }
     });
     fileMenu.getItems().add(openItem);
@@ -90,7 +108,7 @@ public class Gui extends Application {
       File selectedFile = fileChooser.showSaveDialog(stage);
       if (selectedFile != null) {
         selectedFile = new File(selectedFile.getAbsolutePath() + ".graph");
-        String content = "Some serialized graph data"; // TODO: Serialize the graph data
+        String content = graph.toString();
         try (java.io.FileWriter writer = new java.io.FileWriter(selectedFile)) {
           writer.write(content);
         } catch (java.io.IOException ex) {
