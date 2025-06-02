@@ -11,5 +11,13 @@
 
 <artifactId>backend</artifactId>
 <packaging>jar</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>24-ea+5</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 </project>
 
