@@ -34,7 +34,7 @@ public class Gui extends Application {
     MenuItem newMapItem = new MenuItem("New Map");
     newMapItem.setOnAction(e -> {
       FileChooser fileChooser = new FileChooser();
-      fileChooser.setTitle("Open Resource File");
+      fileChooser.setTitle("Open Map");
       fileChooser.getExtensionFilters().addAll(
           new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif"),
           new ExtensionFilter("All Files", "*.*"));
@@ -56,13 +56,35 @@ public class Gui extends Application {
 
     MenuItem openItem = new MenuItem("Open");
     openItem.setOnAction(e -> {
-      System.out.println("Open Map dialog!");
+      FileChooser fileChooser = new FileChooser();
+      fileChooser.setTitle("Open Graph");
+      fileChooser.getExtensionFilters().addAll(
+          new ExtensionFilter("Graph files", "*.graph", "*.txt"),
+          new ExtensionFilter("All Files", "*.*"));
+      File selectedFile = fileChooser.showOpenDialog(stage);
+      if (selectedFile != null) {
+        // TODO: Load the graph from the selected file
+      }
     });
     fileMenu.getItems().add(openItem);
 
     MenuItem saveItem = new MenuItem("Save");
     saveItem.setOnAction(e -> {
-      System.out.println("Save Map dialog!");
+      FileChooser fileChooser = new FileChooser();
+      fileChooser.setTitle("Save Graph");
+      fileChooser.getExtensionFilters().addAll(
+          new ExtensionFilter("Graph files", "*.graph", "*.txt"),
+          new ExtensionFilter("All Files", "*.*"));
+      File selectedFile = fileChooser.showSaveDialog(stage);
+      if (selectedFile != null) {
+        selectedFile = new File(selectedFile.getAbsolutePath() + ".graph");
+        String content = "Some serialized graph data"; // TODO: Serialize the graph data
+        try (java.io.FileWriter writer = new java.io.FileWriter(selectedFile)) {
+          writer.write(content);
+        } catch (java.io.IOException ex) {
+          System.err.println("Error saving graph: " + ex.getMessage());
+        }
+      }
     });
     fileMenu.getItems().add(saveItem);
 
