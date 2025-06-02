@@ -1,5 +1,7 @@
 package se.su.inlupp;
 
+import java.io.File;
+
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -7,8 +9,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.image.Image;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.FileChooser.ExtensionFilter;
 
 public class Gui extends Application {
 
@@ -22,34 +29,46 @@ public class Gui extends Application {
     root.setAlignment(Pos.CENTER);
     Scene scene = new Scene(root, 640, 480);
 
-    // add a "file" menu
-    // MenuBar menuBar = new MenuBar();
     Menu fileMenu = new Menu("File");
 
     MenuItem newMapItem = new MenuItem("New Map");
     newMapItem.setOnAction(e -> {
-      System.out.println("New Map created!");
+      FileChooser fileChooser = new FileChooser();
+      fileChooser.setTitle("Open Resource File");
+      fileChooser.getExtensionFilters().addAll(
+          new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif"),
+          new ExtensionFilter("All Files", "*.*"));
+      File selectedFile = fileChooser.showOpenDialog(stage);
+      if (selectedFile != null) {
+        String url = selectedFile.toURI().toString();
+        Image image = new Image(url);
+        double width = image.getWidth();
+        double height = image.getHeight();
+        BackgroundSize backgroundSize = new BackgroundSize(width, height, false, false, true, false);
+        BackgroundImage backgroundImage = new BackgroundImage(image, null, null, null, backgroundSize);
+        root.setBackground(new javafx.scene.layout.Background(backgroundImage));
+        stage.setWidth(width);
+        stage.setHeight(height);
+        stage.setResizable(false);
+      }
     });
     fileMenu.getItems().add(newMapItem);
 
     MenuItem openItem = new MenuItem("Open");
     openItem.setOnAction(e -> {
       System.out.println("Open Map dialog!");
-      // Here you would typically open a file chooser dialog to select a map file
     });
     fileMenu.getItems().add(openItem);
 
     MenuItem saveItem = new MenuItem("Save");
     saveItem.setOnAction(e -> {
       System.out.println("Save Map dialog!");
-      // Here you would typically open a file chooser dialog to save the map file
     });
     fileMenu.getItems().add(saveItem);
 
     MenuItem saveImageItem = new MenuItem("Save Image");
     saveImageItem.setOnAction(e -> {
       System.out.println("Save Image dialog!");
-      // Here you would typically open a file chooser dialog to save the image
     });
     fileMenu.getItems().add(saveImageItem);
 
