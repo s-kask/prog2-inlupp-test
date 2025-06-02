@@ -8,8 +8,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.imageio.ImageIO;
 
 import javafx.application.Application;
+import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -23,6 +26,7 @@ import javafx.stage.Stage;
 import javafx.stage.FileChooser.ExtensionFilter;
 
 public class Gui extends Application {
+  private boolean hasUnsavedChanges = false; // TODO: Track unsaved changes
 
   public void start(Stage stage) {
     Graph<String> graph = new ListGraph<String>();
@@ -129,7 +133,7 @@ public class Gui extends Application {
     fileMenu.getItems().add(saveImageItem);
 
     MenuItem exitItem = new MenuItem("Exit");
-    exitItem.setOnAction(e -> System.exit(0));
+    exitItem.setOnAction(this::onCloseRequest);
 
     fileMenu.getItems().add(exitItem);
 
@@ -139,8 +143,27 @@ public class Gui extends Application {
     root.getChildren().add(0, menuBar);
     root.setAlignment(Pos.TOP_CENTER);
 
+    stage.setOnCloseRequest(this::onCloseRequest);
+
     stage.setScene(scene);
     stage.show();
+  }
+
+  public void onCloseRequest(Event event) {
+    if (!hasUnsavedChanges) {
+      return;
+    }
+    Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+        "You have unsaved changes. Do you want to save before exiting?", ButtonType.YES, ButtonType.NO);
+    alert.setTitle("Unsaved Changes");
+    alert.setHeaderText(null);
+    alert.showAndWait().ifPresent(response -> {
+      if (response == ButtonType.NO) {
+        event.consume();
+        return;
+      }
+      System.exit(0);
+    });
   }
 
   public static void main(String[] args) {
