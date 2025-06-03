@@ -407,12 +407,6 @@ public class Gui extends Application {
                 toPlace.x, toPlace.y);
             lineShape.setStrokeWidth(2);
             mapPane.getChildren().add(lineShape);
-            // Lägg till etikett för förbindelsen
-            javafx.scene.text.Text label = new javafx.scene.text.Text(
-                (fromPlace.x + toPlace.x) / 2, (fromPlace.y + toPlace.y) / 2,
-                connectionName);
-            label.setFill(javafx.scene.paint.Color.RED);
-            mapPane.getChildren().add(label);
           }
         }
       }
