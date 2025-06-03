@@ -36,7 +36,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 public class Gui extends Application {
-  private boolean hasUnsavedChanges = false; // TODO: Track unsaved changes
+  private boolean hasUnsavedChanges = false;
   private File mapFile = null;
   private final Pane mapPane = new Pane();
 
@@ -385,10 +385,23 @@ public class Gui extends Application {
     }
 
     Graphics2D g2d = image.createGraphics();
-    // TODO: Draw the graph on the image
-    g2d.setColor(java.awt.Color.RED);
     int radius = 5;
-    g2d.fillOval(100 - radius, 100 - radius, radius * 2, radius * 2); // Example red dot placed at (100, 100)
+    for (PlaceView pv : places) {
+      g2d.setColor(java.awt.Color.BLUE);
+      int x = (int) pv.x - radius;
+      int y = (int) pv.y - radius;
+      g2d.fillOval(x, y, radius * 2, radius * 2);
+    }
+    for (PlaceView pv : places) {
+      for (Edge<String> edge : graph.getEdgesFrom(pv.name)) {
+        PlaceView to = places.stream().filter(p -> p.name.equals(edge.getDestination())).findFirst().orElse(null);
+        if (to != null) {
+          g2d.setColor(java.awt.Color.RED);
+          g2d.drawLine((int) pv.x, (int) pv.y, (int) to.x, (int) to.y);
+          g2d.drawString(edge.getName(), (int) ((pv.x + to.x) / 2), (int) ((pv.y + to.y) / 2));
+        }
+      }
+    }
     g2d.dispose();
 
     try {
