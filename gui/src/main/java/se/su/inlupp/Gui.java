@@ -11,16 +11,8 @@ import javafx.application.Application;
 import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
+import javafx.stage.WindowEvent;
 import javafx.scene.image.Image;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundSize;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -28,11 +20,11 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.Cursor;
-import javafx.scene.control.Tooltip;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+
 import java.util.Optional;
 
 public class Gui extends Application {
@@ -46,6 +38,11 @@ public class Gui extends Application {
   private final List<PlaceView> selectedPlaces = new ArrayList<>();
 
   public void start(Stage stage) {
+
+    String javaVersion = System.getProperty("java.version");
+    String javafxVersion = System.getProperty("javafx.version");
+    Label label = new Label("Hello, JavaFX " + javafxVersion + ", running on Java " + javaVersion + ".");
+
     VBox root = new VBox(10);
     root.setAlignment(Pos.TOP_CENTER);
     Scene scene = new Scene(root, 640, 480);
@@ -69,7 +66,7 @@ public class Gui extends Application {
     fileMenu.getItems().add(saveImageItem);
 
     MenuItem exitItem = new MenuItem("Exit");
-    exitItem.setOnAction(this::onCloseRequest);
+    exitItem.setOnAction(e -> handleExit());
     fileMenu.getItems().add(exitItem);
 
     MenuBar menuBar = new MenuBar();
@@ -78,7 +75,10 @@ public class Gui extends Application {
     root.getChildren().add(0, menuBar);
     root.setAlignment(Pos.TOP_CENTER);
 
-    stage.setOnCloseRequest(this::onCloseRequest);
+    stage.setOnCloseRequest(e -> {
+      e.consume(); // hindrar automatisk stängning
+      handleExit(); // vi hanterar det själva
+    });
 
     // Knapp för att skapa ny plats
     Button newPlaceButton = new Button("New Place");
@@ -87,10 +87,14 @@ public class Gui extends Application {
     Button showConnectionButton = new Button("Show Connection");
     Button changeConnectionButton = new Button("Change Connection");
 
-    HBox buttonRow = new HBox(10, newPlaceButton, newConnectionButton, showConnectionButton, changeConnectionButton);
+    Button findPathButton = new Button("Find Path");
+
+    HBox buttonRow = new HBox(10, newPlaceButton, newConnectionButton, showConnectionButton, changeConnectionButton,
+        findPathButton);
     buttonRow.setAlignment(Pos.CENTER);
 
     // Karta-panel (bakgrundsarea för platserna)
+    Pane mapPane = new Pane();
     mapPane.setPrefSize(640, 400);
     mapPane.setStyle("-fx-background-color: lightgray;");
 
@@ -253,6 +257,53 @@ public class Gui extends Application {
       }
     });
 
+    findPathButton.setOnAction(e -> {
+      if (selectedPlaces.size() != 2) {
+        showAlert("Error", "You must select exactly two places.");
+        return;
+      }
+
+      PlaceView from = selectedPlaces.get(0);
+      PlaceView to = selectedPlaces.get(1);
+
+      try {
+        List<Edge<String>> path = graph.getPath(from.name, to.name);
+
+        if (path == null || path.isEmpty()) {
+          showAlert("No Path", "There is no path between " + from.name + " and " + to.name);
+          return;
+        }
+
+        StringBuilder pathInfo = new StringBuilder();
+        pathInfo.append("Path from ").append(from.name).append(" to ").append(to.name).append(":\n\n");
+
+        int totalTime = 0;
+        String currentPlace = from.name;
+
+        for (Edge<String> edge : path) {
+          pathInfo.append(currentPlace).append(" --[")
+              .append(edge.getName()).append(" (")
+              .append(edge.getWeight()).append(" min)]--> ")
+              .append(edge.getDestination()).append("\n");
+          totalTime += edge.getWeight();
+          currentPlace = edge.getDestination();
+        }
+
+        pathInfo.append("\nTotal travel time: ").append(totalTime).append(" hours");
+
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setTitle("Path Information");
+        info.setHeaderText("Path between " + from.name + " and " + to.name);
+        info.setContentText(pathInfo.toString());
+        info.setResizable(true);
+        info.getDialogPane().setPrefSize(400, 300);
+        info.showAndWait();
+
+      } catch (NoSuchElementException ex) {
+        showAlert("Error", "One of the places no longer exists.");
+      }
+    });
+
     // Klick på kartan
     mapPane.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
       if (addingNewPlace) {
@@ -268,6 +319,7 @@ public class Gui extends Application {
           if (!name.isBlank()) {
             // Lägg till i grafen
             graph.add(name);
+
             hasUnsavedChanges = true;
 
             // Skapa plats och visa
@@ -313,6 +365,7 @@ public class Gui extends Application {
   }
 
   private void openHandler(Stage stage) {
+
     if (mapFile != null) {
       Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
           "You have unsaved changes. Do you want to discard changes and open a new graph?", ButtonType.YES,
@@ -388,6 +441,7 @@ public class Gui extends Application {
     // TODO: Draw the graph on the image
     g2d.setColor(java.awt.Color.RED);
     int radius = 5;
+
     g2d.fillOval(100 - radius, 100 - radius, radius * 2, radius * 2); // Example red dot placed at (100, 100)
     g2d.dispose();
 
@@ -414,33 +468,32 @@ public class Gui extends Application {
   private void setBackground(VBox root, BackgroundImage backgroundImage) {
     double width = backgroundImage.getSize().getWidth();
     double height = backgroundImage.getSize().getHeight();
-    mapPane.setBackground(new javafx.scene.layout.Background(backgroundImage));
-    mapPane.setMaxSize(width, height);
-    mapPane.setMinSize(width, height);
+
+    root.setBackground(new javafx.scene.layout.Background(backgroundImage));
     Stage stage = (Stage) root.getScene().getWindow();
-    int padding = 20;
-    int menuBarHeight = 120;
-    stage.setWidth(width + padding);
-    stage.setHeight(height + padding + menuBarHeight);
+    stage.setWidth(width);
+    stage.setHeight(height);
     stage.setResizable(false);
   }
 
-  public void onCloseRequest(Event event) {
-    if (!hasUnsavedChanges) {
-      System.exit(0);
-      return;
+  private void handleExit() {
+    if (hasUnsavedChanges) {
+      Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+      alert.setTitle("Osparade ändringar");
+      alert.setHeaderText("Du har osparade ändringar.");
+      alert.setContentText("Vill du avsluta utan att spara?");
+      alert.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+
+      alert.showAndWait().ifPresent(response -> {
+        if (response == ButtonType.OK) {
+          System.exit(0); // Avsluta
+        }
+        // Annars gör vi inget – användaren valde att stanna kvar
+      });
+    } else {
+      System.exit(0); // Inga ändringar → avsluta direkt
     }
-    Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-        "You have unsaved changes. Do you want to exit without saving?", ButtonType.YES, ButtonType.NO);
-    alert.setTitle("Unsaved Changes");
-    alert.setHeaderText(null);
-    alert.showAndWait().ifPresent(response -> {
-      if (response == ButtonType.NO) {
-        event.consume();
-        return;
-      }
-      System.exit(0);
-    });
+
   }
 
   private void showAlert(String title, String message) {

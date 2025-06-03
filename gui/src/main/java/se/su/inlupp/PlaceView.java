@@ -9,6 +9,7 @@ class PlaceView {
     Circle circle;
     boolean isSelected = false;
 
+
     //skapar en ny plats
     PlaceView(String name, double x, double y) {
         this.name = name;
@@ -24,6 +25,7 @@ class PlaceView {
         isSelected = !isSelected;
         updateColor();
     }
+
 
     //Uppdaterar cirkelns färg baserat på om platsen är markerad eller inte
     void updateColor() {
