@@ -11,10 +11,19 @@ import javafx.application.Application;
 import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.stage.WindowEvent;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
@@ -25,9 +34,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import java.util.Optional;
+
 public class Gui extends Application {
-  private boolean hasUnsavedChanges = true; // TODO: Track unsaved changes
+  private boolean hasUnsavedChanges = false; // TODO: Track unsaved changes
   private File mapFile = null;
+  private final Pane mapPane = new Pane();
+
 
   private boolean addingNewPlace = false;
   private final Graph<String> graph = new ListGraph<>();
@@ -35,9 +48,11 @@ public class Gui extends Application {
   private final List<PlaceView> selectedPlaces = new ArrayList<>();
 
   public void start(Stage stage) {
+
     String javaVersion = System.getProperty("java.version");
     String javafxVersion = System.getProperty("javafx.version");
     Label label = new Label("Hello, JavaFX " + javafxVersion + ", running on Java " + javaVersion + ".");
+
 
     VBox root = new VBox(10);
     root.setAlignment(Pos.TOP_CENTER);
@@ -62,7 +77,9 @@ public class Gui extends Application {
     fileMenu.getItems().add(saveImageItem);
 
     MenuItem exitItem = new MenuItem("Exit");
-    exitItem.setOnAction(e -> handleExit());
+
+    exitItem.setOnAction(this::onCloseRequest);
+
     fileMenu.getItems().add(exitItem);
 
     MenuBar menuBar = new MenuBar();
@@ -71,12 +88,17 @@ public class Gui extends Application {
     root.getChildren().add(0, menuBar);
     root.setAlignment(Pos.TOP_CENTER);
 
+
+    stage.setOnCloseRequest(this::onCloseRequest);
+
+
     // Knapp för att skapa ny plats
     Button newPlaceButton = new Button("New Place");
     // knapp för skapa connection mellan två platser
     Button newConnectionButton = new Button("New Connection");
     Button showConnectionButton = new Button("Show Connection");
     Button changeConnectionButton = new Button("Change Connection");
+
     Button findPathButton = new Button("Find Path");
 
     HBox buttonRow = new HBox(10, newPlaceButton, newConnectionButton, showConnectionButton, changeConnectionButton,
@@ -294,6 +316,7 @@ public class Gui extends Application {
       }
     });
 
+
     // Klick på kartan
     mapPane.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
       if (addingNewPlace) {
@@ -309,6 +332,8 @@ public class Gui extends Application {
           if (!name.isBlank()) {
             // Lägg till i grafen
             graph.add(name);
+
+            hasUnsavedChanges = true;
 
             // Skapa plats och visa
             PlaceView pv = new PlaceView(name, x, y);
@@ -353,7 +378,18 @@ public class Gui extends Application {
   }
 
   private void openHandler(Stage stage) {
-    // TODO: If a map is already open, prompt to save changes
+    
+    if (mapFile != null) {
+      Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+          "You have unsaved changes. Do you want to discard changes and open a new graph?", ButtonType.YES,
+          ButtonType.NO);
+      alert.setTitle("Unsaved Changes");
+      alert.setHeaderText(null);
+      Optional<ButtonType> result = alert.showAndWait();
+      if (result.isPresent() && result.get() == ButtonType.NO) {
+        return;
+      }
+    }
     FileChooser fileChooser = new FileChooser();
     fileChooser.setTitle("Open Graph");
     fileChooser.getExtensionFilters().addAll(
@@ -418,7 +454,8 @@ public class Gui extends Application {
     // TODO: Draw the graph on the image
     g2d.setColor(java.awt.Color.RED);
     int radius = 5;
-    g2d.fillOval(100 - radius, 100 - radius, radius * 2, radius * 2);
+
+    g2d.fillOval(100 - radius, 100 - radius, radius * 2, radius * 2); // Example red dot placed at (100, 100)
     g2d.dispose();
 
     try {
@@ -444,6 +481,7 @@ public class Gui extends Application {
   private void setBackground(VBox root, BackgroundImage backgroundImage) {
     double width = backgroundImage.getSize().getWidth();
     double height = backgroundImage.getSize().getHeight();
+
     root.setBackground(new javafx.scene.layout.Background(backgroundImage));
     Stage stage = (Stage) root.getScene().getWindow();
     stage.setWidth(width);
@@ -468,6 +506,7 @@ public class Gui extends Application {
     } else {
       System.exit(0); // Inga ändringar → avsluta direkt
     }
+
   }
 
   private void showAlert(String title, String message) {

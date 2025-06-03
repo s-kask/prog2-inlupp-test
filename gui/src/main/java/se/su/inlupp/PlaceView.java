@@ -9,7 +9,8 @@ class PlaceView {
     Circle circle;
     boolean isSelected = false;
 
-    // skapar en ny plats
+
+    //skapar en ny plats
     PlaceView(String name, double x, double y) {
         this.name = name;
         this.x = x;
@@ -18,13 +19,15 @@ class PlaceView {
         updateColor();
     }
 
-    // Växlar markeringsstatus för platsen.
+
+    //Växlar markeringsstatus för platsen.
     void toggleSelected() {
         isSelected = !isSelected;
         updateColor();
     }
 
-    // Uppdaterar cirkelns färg baserat på om platsen är markerad eller inte
+
+    //Uppdaterar cirkelns färg baserat på om platsen är markerad eller inte
     void updateColor() {
         circle.setFill(isSelected ? Color.RED : Color.BLUE);
     }
