@@ -2,6 +2,7 @@ package se.su.inlupp;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 
@@ -330,23 +331,107 @@ public class Gui extends Application {
         new ExtensionFilter("Graph files", "*.graph", "*.txt"),
         new ExtensionFilter("All Files", "*.*"));
     File selectedFile = fileChooser.showOpenDialog(stage);
-    if (selectedFile != null) {
-      // TODO: Load the graph from the selected file
-      FileReader reader = null;
-      try {
-        reader = new FileReader(selectedFile);
-        // TODO: Parse the graph from the file
-        // graph.loadFromFile(reader);
-        hasUnsavedChanges = false; // Reset unsaved changes flag
-      } catch (Exception ex) {
-        System.err.println("Error loading graph: " + ex.getMessage());
-      } finally {
-        if (reader != null) {
-          try {
-            reader.close();
-          } catch (Exception ex) {
-            System.err.println("Error closing file: " + ex.getMessage());
+
+    if (selectedFile == null) {
+      return;
+    }
+    // Clear previous data
+    places.clear();
+    mapPane.getChildren().clear();
+    selectedPlaces.clear();
+    hasUnsavedChanges = false;
+
+    FileReader fileReader = null;
+    BufferedReader reader = null;
+    try {
+      fileReader = new FileReader(selectedFile);
+      reader = new BufferedReader(fileReader);
+      String line;
+
+      // Background image
+      line = reader.readLine();
+      if (line != null && !line.isBlank()) {
+        String filePath = line.split(":")[1].trim();
+        mapFile = new File(filePath);
+        BackgroundImage backgroundImage = fileToBackgroundImage(mapFile);
+        setBackground((VBox) stage.getScene().getRoot(), backgroundImage);
+      }
+
+      // Places
+      line = reader.readLine();
+      if (line != null && !line.isBlank()) {
+        String[] placeData = line.split(";");
+        for (int i = 0; i < placeData.length; i += 3) {
+          if (i + 2 < placeData.length) {
+            String name = placeData[i];
+            double x = Double.parseDouble(placeData[i + 1]);
+            double y = Double.parseDouble(placeData[i + 2]);
+
+            // Lägg till plats i grafen
+            graph.add(name);
+            hasUnsavedChanges = true;
+
+            // Skapa och visa plats
+            PlaceView pv = new PlaceView(name, x, y);
+            places.add(pv);
+            Tooltip.install(pv.circle, new Tooltip(name));
+            mapPane.getChildren().add(pv.circle);
+
+            // Klickbarhet på plats
+            pv.circle.setOnMouseClicked(circleEvent -> {
+              circleEvent.consume(); // förhindrar att kartan får klicket
+              handlePlaceClick(pv);
+            });
           }
+        }
+      }
+
+      // Edges
+      while ((line = reader.readLine()) != null) {
+        String[] parts = line.split(";");
+        if (parts.length == 4) {
+          String fromName = parts[0];
+          String toName = parts[1];
+          String connectionName = parts[2];
+          int weight = Integer.parseInt(parts[3]);
+
+          // Lägg till förbindelse i grafen
+          graph.connect(fromName, toName, connectionName, weight);
+
+          // Rita linje
+          PlaceView fromPlace = places.stream().filter(p -> p.name.equals(fromName)).findFirst().orElse(null);
+          PlaceView toPlace = places.stream().filter(p -> p.name.equals(toName)).findFirst().orElse(null);
+          if (fromPlace != null && toPlace != null) {
+            javafx.scene.shape.Line lineShape = new javafx.scene.shape.Line(fromPlace.x,
+                fromPlace.y,
+                toPlace.x, toPlace.y);
+            lineShape.setStrokeWidth(2);
+            mapPane.getChildren().add(lineShape);
+            // Lägg till etikett för förbindelsen
+            javafx.scene.text.Text label = new javafx.scene.text.Text(
+                (fromPlace.x + toPlace.x) / 2, (fromPlace.y + toPlace.y) / 2,
+                connectionName);
+            label.setFill(javafx.scene.paint.Color.RED);
+            mapPane.getChildren().add(label);
+          }
+        }
+      }
+    } catch (Exception ex) {
+      System.err.println("Error loading graph: " + ex.getMessage());
+      showAlert("Fel", "Kunde inte läsa in grafen: " + ex.getMessage());
+    } finally {
+      if (fileReader != null) {
+        try {
+          fileReader.close();
+        } catch (Exception ex) {
+          System.err.println("Error closing file: " + ex.getMessage());
+        }
+      }
+      if (reader != null) {
+        try {
+          reader.close();
+        } catch (Exception ex) {
+          System.err.println("Error closing reader: " + ex.getMessage());
         }
       }
     }
