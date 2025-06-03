@@ -361,7 +361,32 @@ public class Gui extends Application {
     File selectedFile = fileChooser.showSaveDialog(stage);
     if (selectedFile != null) {
       selectedFile = new File(selectedFile.getAbsolutePath() + ".graph");
-      String content = graph.toString();
+      StringBuilder sb = new StringBuilder();
+      // Add map file URI
+      sb.append(mapFile.toURI().toString()).append("\n");
+
+      // Add places
+      for (PlaceView pv : places) {
+        sb.append(pv.name).append(";")
+            .append(pv.x).append(";")
+            .append(pv.y).append(";");
+      }
+      if (sb.length() > 0) { // Remove trailing semicolon
+        sb.setLength(sb.length() - 1);
+      }
+      sb.append("\n");
+      // Add edges
+      for (PlaceView pv : places) {
+        for (Edge<String> edge : graph.getEdgesFrom(pv.name)) {
+          sb.append(pv.name).append(";")
+              .append(edge.getDestination()).append(";")
+              .append(edge.getName()).append(";")
+              .append(edge.getWeight()).append("\n");
+        }
+      }
+      String content = sb.toString();
+
+      hasUnsavedChanges = false;
       try (java.io.FileWriter writer = new java.io.FileWriter(selectedFile)) {
         writer.write(content);
       } catch (java.io.IOException ex) {
