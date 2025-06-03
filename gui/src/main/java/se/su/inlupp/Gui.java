@@ -33,10 +33,12 @@ import javafx.scene.control.Tooltip;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 public class Gui extends Application {
   private boolean hasUnsavedChanges = false; // TODO: Track unsaved changes
   private File mapFile = null;
+  private final Pane mapPane = new Pane();
 
   private boolean addingNewPlace = false;
   private final Graph<String> graph = new ListGraph<>();
@@ -44,10 +46,6 @@ public class Gui extends Application {
   private final List<PlaceView> selectedPlaces = new ArrayList<>();
 
   public void start(Stage stage) {
-    String javaVersion = System.getProperty("java.version");
-    String javafxVersion = System.getProperty("javafx.version");
-    Label label = new Label("Hello, JavaFX " + javafxVersion + ", running on Java " + javaVersion + ".");
-
     VBox root = new VBox(10);
     root.setAlignment(Pos.TOP_CENTER);
     Scene scene = new Scene(root, 640, 480);
@@ -93,7 +91,6 @@ public class Gui extends Application {
     buttonRow.setAlignment(Pos.CENTER);
 
     // Karta-panel (bakgrundsarea för platserna)
-    Pane mapPane = new Pane();
     mapPane.setPrefSize(640, 400);
     mapPane.setStyle("-fx-background-color: lightgray;");
 
@@ -271,6 +268,7 @@ public class Gui extends Application {
           if (!name.isBlank()) {
             // Lägg till i grafen
             graph.add(name);
+            hasUnsavedChanges = true;
 
             // Skapa plats och visa
             PlaceView pv = new PlaceView(name, x, y);
@@ -315,7 +313,17 @@ public class Gui extends Application {
   }
 
   private void openHandler(Stage stage) {
-    // TODO: If a map is already open, prompt to save changes
+    if (mapFile != null) {
+      Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+          "You have unsaved changes. Do you want to discard changes and open a new graph?", ButtonType.YES,
+          ButtonType.NO);
+      alert.setTitle("Unsaved Changes");
+      alert.setHeaderText(null);
+      Optional<ButtonType> result = alert.showAndWait();
+      if (result.isPresent() && result.get() == ButtonType.NO) {
+        return;
+      }
+    }
     FileChooser fileChooser = new FileChooser();
     fileChooser.setTitle("Open Graph");
     fileChooser.getExtensionFilters().addAll(
@@ -380,7 +388,7 @@ public class Gui extends Application {
     // TODO: Draw the graph on the image
     g2d.setColor(java.awt.Color.RED);
     int radius = 5;
-    g2d.fillOval(100 - radius, 100 - radius, radius * 2, radius * 2);
+    g2d.fillOval(100 - radius, 100 - radius, radius * 2, radius * 2); // Example red dot placed at (100, 100)
     g2d.dispose();
 
     try {
@@ -406,10 +414,14 @@ public class Gui extends Application {
   private void setBackground(VBox root, BackgroundImage backgroundImage) {
     double width = backgroundImage.getSize().getWidth();
     double height = backgroundImage.getSize().getHeight();
-    root.setBackground(new javafx.scene.layout.Background(backgroundImage));
+    mapPane.setBackground(new javafx.scene.layout.Background(backgroundImage));
+    mapPane.setMaxSize(width, height);
+    mapPane.setMinSize(width, height);
     Stage stage = (Stage) root.getScene().getWindow();
-    stage.setWidth(width);
-    stage.setHeight(height);
+    int padding = 20;
+    int menuBarHeight = 120;
+    stage.setWidth(width + padding);
+    stage.setHeight(height + padding + menuBarHeight);
     stage.setResizable(false);
   }
 
@@ -419,7 +431,7 @@ public class Gui extends Application {
       return;
     }
     Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-        "You have unsaved changes. Do you want to save before exiting?", ButtonType.YES, ButtonType.NO);
+        "You have unsaved changes. Do you want to exit without saving?", ButtonType.YES, ButtonType.NO);
     alert.setTitle("Unsaved Changes");
     alert.setHeaderText(null);
     alert.showAndWait().ifPresent(response -> {
