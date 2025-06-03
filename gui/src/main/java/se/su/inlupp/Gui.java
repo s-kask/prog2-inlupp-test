@@ -395,6 +395,11 @@ public class Gui extends Application {
           String connectionName = parts[2];
           int weight = Integer.parseInt(parts[3]);
 
+          // kolla så att det inte finns redan existerande kant
+          if (graph.getEdgeBetween(fromName, toName) != null) {
+            continue;
+          }
+
           // Lägg till förbindelse i grafen
           graph.connect(fromName, toName, connectionName, weight);
 

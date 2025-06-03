@@ -90,6 +90,7 @@ public class ListGraph<N> implements Graph<N> {
 
     // lägger till och skapar kanterna
     adjacencyList.get(node1).add(new Edge<>(node2, name, weigth));
+    adjacencyList.get(node2).add(new Edge<>(node1, name, weigth));
   }
 
   // avkopplar två noder
