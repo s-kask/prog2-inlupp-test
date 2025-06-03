@@ -137,7 +137,7 @@ public class Gui extends Application {
       TextInputDialog timeDialog = new TextInputDialog();
       timeDialog.setTitle("Restid");
       timeDialog.setHeaderText("Hur lång tid tar förbindelsen?");
-      timeDialog.setContentText("Tid (heltal):");
+      timeDialog.setContentText("Tid (heltal i timmar):");
 
       String timeStr = timeDialog.showAndWait().orElse("").trim();
       int time;
@@ -190,7 +190,7 @@ public class Gui extends Application {
         info.setHeaderText("Förbindelse mellan " + from.name + " och " + to.name);
         info.setContentText(
             "Namn: " + edge.getName() + "\n" +
-                "Tid: " + edge.getWeight() + " enheter");
+                "Tid: " + edge.getWeight() + " Timmar");
         info.showAndWait();
 
       } catch (NoSuchElementException ex) {
@@ -220,7 +220,7 @@ public class Gui extends Application {
         nameField.setEditable(false);
 
         TextField timeField = new TextField();
-        timeField.setPromptText("Ny tid");
+        timeField.setPromptText("Ny tid (i timmar)");
 
         GridPane grid = new GridPane();
         grid.setHgap(10);
