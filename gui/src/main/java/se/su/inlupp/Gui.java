@@ -12,16 +12,7 @@ import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.stage.WindowEvent;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundSize;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -41,7 +32,6 @@ public class Gui extends Application {
   private File mapFile = null;
   private final Pane mapPane = new Pane();
 
-
   private boolean addingNewPlace = false;
   private final Graph<String> graph = new ListGraph<>();
   private final List<PlaceView> places = new ArrayList<>();
@@ -52,7 +42,6 @@ public class Gui extends Application {
     String javaVersion = System.getProperty("java.version");
     String javafxVersion = System.getProperty("javafx.version");
     Label label = new Label("Hello, JavaFX " + javafxVersion + ", running on Java " + javaVersion + ".");
-
 
     VBox root = new VBox(10);
     root.setAlignment(Pos.TOP_CENTER);
@@ -77,9 +66,7 @@ public class Gui extends Application {
     fileMenu.getItems().add(saveImageItem);
 
     MenuItem exitItem = new MenuItem("Exit");
-
-    exitItem.setOnAction(this::onCloseRequest);
-
+    exitItem.setOnAction(e -> handleExit());
     fileMenu.getItems().add(exitItem);
 
     MenuBar menuBar = new MenuBar();
@@ -88,9 +75,10 @@ public class Gui extends Application {
     root.getChildren().add(0, menuBar);
     root.setAlignment(Pos.TOP_CENTER);
 
-
-    stage.setOnCloseRequest(this::onCloseRequest);
-
+    stage.setOnCloseRequest(e -> {
+      e.consume(); // hindrar automatisk stängning
+      handleExit(); // vi hanterar det själva
+    });
 
     // Knapp för att skapa ny plats
     Button newPlaceButton = new Button("New Place");
@@ -316,7 +304,6 @@ public class Gui extends Application {
       }
     });
 
-
     // Klick på kartan
     mapPane.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
       if (addingNewPlace) {
@@ -378,7 +365,7 @@ public class Gui extends Application {
   }
 
   private void openHandler(Stage stage) {
-    
+
     if (mapFile != null) {
       Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
           "You have unsaved changes. Do you want to discard changes and open a new graph?", ButtonType.YES,
