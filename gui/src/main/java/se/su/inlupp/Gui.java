@@ -9,11 +9,11 @@ import java.io.FileReader;
 import javax.imageio.ImageIO;
 
 import javafx.application.Application;
-import javafx.event.Event;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.stage.WindowEvent;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -31,7 +31,8 @@ import java.util.Optional;
 public class Gui extends Application {
   private boolean hasUnsavedChanges = false;
   private File mapFile = null;
-  private final Pane mapPane = new Pane();
+  private final StackPane mapPane = new StackPane();
+  private ImageView mapImageView = new ImageView();
 
   private boolean addingNewPlace = false;
   private final Graph<String> graph = new ListGraph<>();
@@ -39,67 +40,71 @@ public class Gui extends Application {
   private final List<PlaceView> selectedPlaces = new ArrayList<>();
 
   public void start(Stage stage) {
-
-    String javaVersion = System.getProperty("java.version");
-    String javafxVersion = System.getProperty("javafx.version");
-    Label label = new Label("Hello, JavaFX " + javafxVersion + ", running on Java " + javaVersion + ".");
-
     VBox root = new VBox(10);
     root.setAlignment(Pos.TOP_CENTER);
-    Scene scene = new Scene(root, 640, 480);
+    root.setPadding(new Insets(0, 20, 0, 20)); // skapar padding runt root
 
+    // Skapar menu bar
+    MenuBar menuBar = createMenuBar(stage, root);
+
+    // Skapar button row
+    HBox buttonRow = creatButtonRow();
+
+    // Ställer in mapPane med bildvy
+    mapPane.getChildren().add(mapImageView);
+
+    // Lägger till allt i root
+    root.getChildren().addAll(menuBar, buttonRow, mapPane);
+
+    Scene scene = new Scene(root);
+    stage.setScene(scene);
+    stage.setTitle("Map Application");
+    stage.show();
+  }
+
+  private MenuBar createMenuBar(Stage stage, VBox root) {
     Menu fileMenu = new Menu("File");
 
     MenuItem newMapItem = new MenuItem("New Map");
-    newMapItem.setOnAction(e -> newMapHandler(root));
-    fileMenu.getItems().add(newMapItem);
+    newMapItem.setOnAction(e -> newMapHandler(stage));
 
     MenuItem openItem = new MenuItem("Open");
     openItem.setOnAction(e -> openHandler(stage));
-    fileMenu.getItems().add(openItem);
 
     MenuItem saveItem = new MenuItem("Save");
     saveItem.setOnAction(e -> saveHandler(stage));
-    fileMenu.getItems().add(saveItem);
 
     MenuItem saveImageItem = new MenuItem("Save Image");
     saveImageItem.setOnAction(e -> saveImageHandler());
-    fileMenu.getItems().add(saveImageItem);
 
     MenuItem exitItem = new MenuItem("Exit");
     exitItem.setOnAction(e -> handleExit());
-    fileMenu.getItems().add(exitItem);
+
+    fileMenu.getItems().addAll(newMapItem, openItem, saveItem, saveImageItem, exitItem);
 
     MenuBar menuBar = new MenuBar();
     menuBar.getMenus().add(fileMenu);
 
-    root.getChildren().add(0, menuBar);
-    root.setAlignment(Pos.TOP_CENTER);
+    // Lägg till padding här:
+    menuBar.setPadding(new Insets(5, 20, 5, 20)); // top, right, bottom, left
 
     stage.setOnCloseRequest(e -> {
       e.consume(); // hindrar automatisk stängning
       handleExit(); // vi hanterar det själva
     });
+    return menuBar;
+  }
 
-    // Knapp för att skapa ny plats
-    Button newPlaceButton = new Button("New Place");
-    // knapp för skapa connection mellan två platser
-    Button newConnectionButton = new Button("New Connection");
+  private HBox creatButtonRow() {
+    Button newPlaceButton = new Button("New Place"); // Knapp för att skapa ny plats
+    Button newConnectionButton = new Button("New Connection"); // knapp för skapa connection mellan två platser
     Button showConnectionButton = new Button("Show Connection");
     Button changeConnectionButton = new Button("Change Connection");
-
     Button findPathButton = new Button("Find Path");
 
     HBox buttonRow = new HBox(10, newPlaceButton, newConnectionButton, showConnectionButton, changeConnectionButton,
         findPathButton);
     buttonRow.setAlignment(Pos.CENTER);
-
-    // Karta-panel (bakgrundsarea för platserna)
-    Pane mapPane = new Pane();
-    mapPane.setPrefSize(640, 400);
-    mapPane.setStyle("-fx-background-color: lightgray;");
-
-    root.getChildren().addAll(buttonRow, mapPane);
 
     // Klick på "New Place" aktiverar platsläget
     newPlaceButton.setOnAction(e -> {
@@ -344,24 +349,38 @@ public class Gui extends Application {
       }
     });
 
-    stage.setTitle("Map Application");
-
-    stage.setScene(scene);
-    stage.show();
+    return buttonRow;
   }
 
-  private void newMapHandler(VBox root) {
+  private void newMapHandler(Stage stage) {
     FileChooser fileChooser = new FileChooser();
     fileChooser.setTitle("Open Map");
     fileChooser.getExtensionFilters().addAll(
         new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif"),
         new ExtensionFilter("All Files", "*.*"));
-    Stage stage = (Stage) root.getScene().getWindow();
+
     File selectedFile = fileChooser.showOpenDialog(stage);
     if (selectedFile != null) {
       mapFile = selectedFile;
-      BackgroundImage backgroundImage = fileToBackgroundImage(selectedFile);
-      setBackground(root, backgroundImage);
+      try {
+        Image image = new Image(selectedFile.toURI().toString());
+        mapImageView.setImage(image);
+
+        // Rensar existerande places and connections
+        mapPane.getChildren().clear();
+        mapPane.getChildren().add(mapImageView);
+        places.clear();
+        selectedPlaces.clear();
+        // graph.clear();
+
+        // Ändrar storlek på window så den passar image
+        Stage primaryStage = (Stage) mapPane.getScene().getWindow();
+        primaryStage.setWidth(image.getWidth() + 40);
+        primaryStage.setHeight(image.getHeight() + 100); // Extra space for menu and buttons
+
+      } catch (Exception ex) {
+        showAlert("Error", "Kunde inte ladda karta: " + ex.getMessage());
+      }
     }
   }
 
@@ -576,26 +595,28 @@ public class Gui extends Application {
     }
   }
 
-  private BackgroundImage fileToBackgroundImage(File selectedFile) {
-    String url = selectedFile.toURI().toString();
-    Image image = new Image(url);
-    double width = image.getWidth();
-    double height = image.getHeight();
-    BackgroundSize backgroundSize = new BackgroundSize(width, height, false, false, true, false);
-    BackgroundImage backgroundImage = new BackgroundImage(image, null, null, null, backgroundSize);
-    return backgroundImage;
-  }
+  // private BackgroundImage fileToBackgroundImage(File selectedFile) {
+  // String url = selectedFile.toURI().toString();
+  // Image image = new Image(url);
+  // double width = image.getWidth();
+  // double height = image.getHeight();
+  // BackgroundSize backgroundSize = new BackgroundSize(width, height, false,
+  // false, true, false);
+  // BackgroundImage backgroundImage = new BackgroundImage(image, null, null,
+  // null, backgroundSize);
+  // return backgroundImage;
+  // }
 
-  private void setBackground(VBox root, BackgroundImage backgroundImage) {
-    double width = backgroundImage.getSize().getWidth();
-    double height = backgroundImage.getSize().getHeight();
+  // private void setBackground(VBox root, BackgroundImage backgroundImage) {
+  // double width = backgroundImage.getSize().getWidth();
+  // double height = backgroundImage.getSize().getHeight();
 
-    root.setBackground(new javafx.scene.layout.Background(backgroundImage));
-    Stage stage = (Stage) root.getScene().getWindow();
-    stage.setWidth(width);
-    stage.setHeight(height);
-    stage.setResizable(false);
-  }
+  // root.setBackground(new javafx.scene.layout.Background(backgroundImage));
+  // Stage stage = (Stage) root.getScene().getWindow();
+  // stage.setWidth(width);
+  // stage.setHeight(height);
+  // stage.setResizable(false);
+  // }
 
   private void handleExit() {
     if (hasUnsavedChanges) {
