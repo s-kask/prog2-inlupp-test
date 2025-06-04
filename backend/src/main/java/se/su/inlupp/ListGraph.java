@@ -31,13 +31,13 @@ public class ListGraph<N> implements Graph<N> {
       N neighbour = edge.getDestination();
 
       if (!visited.contains(neighbour)) {
-        path.add(edge); //Lägg till kant innan rekursion
+        path.add(edge); // Lägg till kant innan rekursion
 
         if (dfsPath(neighbour, target, visited, path)) {
           return true;
         }
 
-        path.remove(path.size() - 1); //Ta bort om vi inte hittade vägen
+        path.remove(path.size() - 1); // Ta bort om vi inte hittade vägen
       }
     }
 
