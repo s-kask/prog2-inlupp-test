@@ -199,6 +199,11 @@ public class ListGraph<N> implements Graph<N> {
   }
 
   @Override
+  public void clear() {
+    adjacencyList.clear();
+  }
+
+  @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
 

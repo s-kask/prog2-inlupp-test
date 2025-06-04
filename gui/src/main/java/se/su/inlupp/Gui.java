@@ -23,10 +23,12 @@ import javafx.scene.layout.*;
 import javafx.scene.Cursor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import java.util.Optional;
+import java.util.Set;
 
 public class Gui extends Application {
   private boolean hasUnsavedChanges = false;
@@ -371,7 +373,7 @@ public class Gui extends Application {
         mapPane.getChildren().add(mapImageView);
         places.clear();
         selectedPlaces.clear();
-        // graph.clear();
+        graph.clear();
 
         // Ändrar storlek på window så den passar image
         Stage primaryStage = (Stage) mapPane.getScene().getWindow();
@@ -411,6 +413,7 @@ public class Gui extends Application {
     places.clear();
     mapPane.getChildren().clear();
     selectedPlaces.clear();
+    graph.clear();
     hasUnsavedChanges = false;
 
     FileReader fileReader = null;
@@ -534,7 +537,7 @@ public class Gui extends Application {
       selectedFile = new File(selectedFile.getAbsolutePath() + ".graph");
       StringBuilder sb = new StringBuilder();
       // Add map file URI
-      sb.append(mapFile.toURI().toString()).append("\n");
+      sb.append("file:").append(mapFile.getName()).append("\n");
 
       // Add places
       for (PlaceView pv : places) {
