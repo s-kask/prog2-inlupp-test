@@ -31,7 +31,7 @@ import java.util.Optional;
 public class Gui extends Application {
   private boolean hasUnsavedChanges = false;
   private File mapFile = null;
-  private final StackPane mapPane = new StackPane();
+  private final Pane mapPane = new Pane();
   private ImageView mapImageView = new ImageView();
 
   private boolean addingNewPlace = false;
@@ -423,10 +423,25 @@ public class Gui extends Application {
       // Background image
       line = reader.readLine();
       if (line != null && !line.isBlank()) {
-        String filePath = line.split(":")[1].trim();
-        mapFile = new File(filePath);
-        BackgroundImage backgroundImage = fileToBackgroundImage(mapFile);
-        setBackground((VBox) stage.getScene().getRoot(), backgroundImage);
+        String fileName = line.split(":", 2)[1].trim();
+
+        // Resolve image path relative to the selected .graph file
+        File imageFile = new File(selectedFile.getParentFile(), fileName);
+        mapFile = imageFile;
+
+        try {
+          Image image = new Image(imageFile.toURI().toString());
+          mapImageView.setImage(image);
+
+          mapPane.getChildren().add(mapImageView); // Add background image first
+
+          // Adjust window size to image
+          Stage primaryStage = (Stage) mapPane.getScene().getWindow();
+          primaryStage.setWidth(image.getWidth() + 40);
+          primaryStage.setHeight(image.getHeight() + 100);
+        } catch (Exception ex) {
+          showAlert("Error", "Kunde inte ladda kartbilden: " + ex.getMessage());
+        }
       }
 
       // Places
