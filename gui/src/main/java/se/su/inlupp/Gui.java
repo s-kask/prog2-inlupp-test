@@ -2,6 +2,7 @@ package se.su.inlupp;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 
@@ -28,7 +29,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 public class Gui extends Application {
-  private boolean hasUnsavedChanges = false; // TODO: Track unsaved changes
+  private boolean hasUnsavedChanges = false;
   private File mapFile = null;
   private final Pane mapPane = new Pane();
 
@@ -383,23 +384,106 @@ public class Gui extends Application {
         new ExtensionFilter("Graph files", "*.graph", "*.txt"),
         new ExtensionFilter("All Files", "*.*"));
     File selectedFile = fileChooser.showOpenDialog(stage);
-    if (selectedFile != null) {
-      // TODO: Load the graph from the selected file
-      FileReader reader = null;
-      try {
-        reader = new FileReader(selectedFile);
-        // TODO: Parse the graph from the file
-        // graph.loadFromFile(reader);
-        hasUnsavedChanges = false; // Reset unsaved changes flag
-      } catch (Exception ex) {
-        System.err.println("Error loading graph: " + ex.getMessage());
-      } finally {
-        if (reader != null) {
-          try {
-            reader.close();
-          } catch (Exception ex) {
-            System.err.println("Error closing file: " + ex.getMessage());
+
+    if (selectedFile == null) {
+      return;
+    }
+    // Clear previous data
+    places.clear();
+    mapPane.getChildren().clear();
+    selectedPlaces.clear();
+    hasUnsavedChanges = false;
+
+    FileReader fileReader = null;
+    BufferedReader reader = null;
+    try {
+      fileReader = new FileReader(selectedFile);
+      reader = new BufferedReader(fileReader);
+      String line;
+
+      // Background image
+      line = reader.readLine();
+      if (line != null && !line.isBlank()) {
+        String filePath = line.split(":")[1].trim();
+        mapFile = new File(filePath);
+        BackgroundImage backgroundImage = fileToBackgroundImage(mapFile);
+        setBackground((VBox) stage.getScene().getRoot(), backgroundImage);
+      }
+
+      // Places
+      line = reader.readLine();
+      if (line != null && !line.isBlank()) {
+        String[] placeData = line.split(";");
+        for (int i = 0; i < placeData.length; i += 3) {
+          if (i + 2 < placeData.length) {
+            String name = placeData[i];
+            double x = Double.parseDouble(placeData[i + 1]);
+            double y = Double.parseDouble(placeData[i + 2]);
+
+            // Lägg till plats i grafen
+            graph.add(name);
+            hasUnsavedChanges = true;
+
+            // Skapa och visa plats
+            PlaceView pv = new PlaceView(name, x, y);
+            places.add(pv);
+            Tooltip.install(pv.circle, new Tooltip(name));
+            mapPane.getChildren().add(pv.circle);
+
+            // Klickbarhet på plats
+            pv.circle.setOnMouseClicked(circleEvent -> {
+              circleEvent.consume(); // förhindrar att kartan får klicket
+              handlePlaceClick(pv);
+            });
           }
+        }
+      }
+
+      // Edges
+      while ((line = reader.readLine()) != null) {
+        String[] parts = line.split(";");
+        if (parts.length == 4) {
+          String fromName = parts[0];
+          String toName = parts[1];
+          String connectionName = parts[2];
+          int weight = Integer.parseInt(parts[3]);
+
+          // kolla så att det inte finns redan existerande kant
+          if (graph.getEdgeBetween(fromName, toName) != null) {
+            continue;
+          }
+
+          // Lägg till förbindelse i grafen
+          graph.connect(fromName, toName, connectionName, weight);
+
+          // Rita linje
+          PlaceView fromPlace = places.stream().filter(p -> p.name.equals(fromName)).findFirst().orElse(null);
+          PlaceView toPlace = places.stream().filter(p -> p.name.equals(toName)).findFirst().orElse(null);
+          if (fromPlace != null && toPlace != null) {
+            javafx.scene.shape.Line lineShape = new javafx.scene.shape.Line(fromPlace.x,
+                fromPlace.y,
+                toPlace.x, toPlace.y);
+            lineShape.setStrokeWidth(2);
+            mapPane.getChildren().add(lineShape);
+          }
+        }
+      }
+    } catch (Exception ex) {
+      System.err.println("Error loading graph: " + ex.getMessage());
+      showAlert("Fel", "Kunde inte läsa in grafen: " + ex.getMessage());
+    } finally {
+      if (fileReader != null) {
+        try {
+          fileReader.close();
+        } catch (Exception ex) {
+          System.err.println("Error closing file: " + ex.getMessage());
+        }
+      }
+      if (reader != null) {
+        try {
+          reader.close();
+        } catch (Exception ex) {
+          System.err.println("Error closing reader: " + ex.getMessage());
         }
       }
     }
@@ -414,7 +498,32 @@ public class Gui extends Application {
     File selectedFile = fileChooser.showSaveDialog(stage);
     if (selectedFile != null) {
       selectedFile = new File(selectedFile.getAbsolutePath() + ".graph");
-      String content = graph.toString();
+      StringBuilder sb = new StringBuilder();
+      // Add map file URI
+      sb.append(mapFile.toURI().toString()).append("\n");
+
+      // Add places
+      for (PlaceView pv : places) {
+        sb.append(pv.name).append(";")
+            .append(pv.x).append(";")
+            .append(pv.y).append(";");
+      }
+      if (sb.length() > 0) { // Remove trailing semicolon
+        sb.setLength(sb.length() - 1);
+      }
+      sb.append("\n");
+      // Add edges
+      for (PlaceView pv : places) {
+        for (Edge<String> edge : graph.getEdgesFrom(pv.name)) {
+          sb.append(pv.name).append(";")
+              .append(edge.getDestination()).append(";")
+              .append(edge.getName()).append(";")
+              .append(edge.getWeight()).append("\n");
+        }
+      }
+      String content = sb.toString();
+
+      hasUnsavedChanges = false;
       try (java.io.FileWriter writer = new java.io.FileWriter(selectedFile)) {
         writer.write(content);
       } catch (java.io.IOException ex) {
@@ -438,11 +547,23 @@ public class Gui extends Application {
     }
 
     Graphics2D g2d = image.createGraphics();
-    // TODO: Draw the graph on the image
-    g2d.setColor(java.awt.Color.RED);
     int radius = 5;
-
-    g2d.fillOval(100 - radius, 100 - radius, radius * 2, radius * 2); // Example red dot placed at (100, 100)
+    for (PlaceView pv : places) {
+      g2d.setColor(java.awt.Color.BLUE);
+      int x = (int) pv.x - radius;
+      int y = (int) pv.y - radius;
+      g2d.fillOval(x, y, radius * 2, radius * 2);
+    }
+    for (PlaceView pv : places) {
+      for (Edge<String> edge : graph.getEdgesFrom(pv.name)) {
+        PlaceView to = places.stream().filter(p -> p.name.equals(edge.getDestination())).findFirst().orElse(null);
+        if (to != null) {
+          g2d.setColor(java.awt.Color.RED);
+          g2d.drawLine((int) pv.x, (int) pv.y, (int) to.x, (int) to.y);
+          g2d.drawString(edge.getName(), (int) ((pv.x + to.x) / 2), (int) ((pv.y + to.y) / 2));
+        }
+      }
+    }
     g2d.dispose();
 
     try {
