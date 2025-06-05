@@ -9,6 +9,7 @@ import java.io.FileReader;
 import javax.imageio.ImageIO;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -23,12 +24,10 @@ import javafx.scene.layout.*;
 import javafx.scene.Cursor;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import java.util.Optional;
-import java.util.Set;
 
 public class Gui extends Application {
   private boolean hasUnsavedChanges = false;
@@ -57,7 +56,7 @@ public class Gui extends Application {
     MenuBar menuBar = createMenuBar(stage, root);
 
     // Skapar button row
-    HBox buttonRow = creatButtonRow();
+    HBox buttonRow = createButtonRow();
 
     // Ställer in mapPane med bildvy
     mapPane.getChildren().add(mapImageView);
@@ -104,7 +103,7 @@ public class Gui extends Application {
     return menuBar;
   }
 
-  private HBox creatButtonRow() {
+  private HBox createButtonRow() {
     newPlaceButton = new Button("New Place"); // Knapp för att skapa ny plats
     newConnectionButton = new Button("New Connection"); // knapp för skapa connection mellan två platser
     showConnectionButton = new Button("Show Connection");
@@ -640,7 +639,7 @@ public class Gui extends Application {
         // Annars gör vi inget – användaren valde att stanna kvar
       });
     } else {
-      System.exit(0); // Inga ändringar → avsluta direkt
+      Platform.exit(); // Inga ändringar → avsluta direkt
     }
 
   }
