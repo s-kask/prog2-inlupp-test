@@ -42,7 +42,6 @@ public class Gui extends Application {
   private final List<PlaceView> selectedPlaces = new ArrayList<>();
 
   // knappar så att jag kan enable/disable dem
-  // Button references for enabling/disabling
   private Button newPlaceButton;
   private Button newConnectionButton;
   private Button showConnectionButton;
