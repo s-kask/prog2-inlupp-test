@@ -23,21 +23,30 @@ import javafx.scene.layout.*;
 import javafx.scene.Cursor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import java.util.Optional;
+import java.util.Set;
 
 public class Gui extends Application {
   private boolean hasUnsavedChanges = false;
   private File mapFile = null;
-  private final StackPane mapPane = new StackPane();
+  private final Pane mapPane = new Pane();
   private ImageView mapImageView = new ImageView();
 
   private boolean addingNewPlace = false;
   private final Graph<String> graph = new ListGraph<>();
   private final List<PlaceView> places = new ArrayList<>();
   private final List<PlaceView> selectedPlaces = new ArrayList<>();
+
+  // knappar så att jag kan enable/disable dem
+  private Button newPlaceButton;
+  private Button newConnectionButton;
+  private Button showConnectionButton;
+  private Button changeConnectionButton;
+  private Button findPathButton;
 
   public void start(Stage stage) {
     VBox root = new VBox(10);
@@ -96,11 +105,14 @@ public class Gui extends Application {
   }
 
   private HBox creatButtonRow() {
-    Button newPlaceButton = new Button("New Place"); // Knapp för att skapa ny plats
-    Button newConnectionButton = new Button("New Connection"); // knapp för skapa connection mellan två platser
-    Button showConnectionButton = new Button("Show Connection");
-    Button changeConnectionButton = new Button("Change Connection");
-    Button findPathButton = new Button("Find Path");
+    newPlaceButton = new Button("New Place"); // Knapp för att skapa ny plats
+    newConnectionButton = new Button("New Connection"); // knapp för skapa connection mellan två platser
+    showConnectionButton = new Button("Show Connection");
+    changeConnectionButton = new Button("Change Connection");
+    findPathButton = new Button("Find Path");
+
+    // avaktivera knapparna initialt
+    disableAllButtons();
 
     HBox buttonRow = new HBox(10, newPlaceButton, newConnectionButton, showConnectionButton, changeConnectionButton,
         findPathButton);
@@ -289,7 +301,7 @@ public class Gui extends Application {
         for (Edge<String> edge : path) {
           pathInfo.append(currentPlace).append(" --[")
               .append(edge.getName()).append(" (")
-              .append(edge.getWeight()).append(" min)]--> ")
+              .append(edge.getWeight()).append(" h)]--> ")
               .append(edge.getDestination()).append("\n");
           totalTime += edge.getWeight();
           currentPlace = edge.getDestination();
@@ -371,7 +383,7 @@ public class Gui extends Application {
         mapPane.getChildren().add(mapImageView);
         places.clear();
         selectedPlaces.clear();
-        // graph.clear();
+        graph.clear();
 
         // Ändrar storlek på window så den passar image
         Stage primaryStage = (Stage) mapPane.getScene().getWindow();
@@ -382,6 +394,7 @@ public class Gui extends Application {
         showAlert("Error", "Kunde inte ladda karta: " + ex.getMessage());
       }
     }
+    enableAllButtons(); // Aktivera knappar efter ny karta
   }
 
   private void openHandler(Stage stage) {
@@ -411,6 +424,7 @@ public class Gui extends Application {
     places.clear();
     mapPane.getChildren().clear();
     selectedPlaces.clear();
+    graph.clear();
     hasUnsavedChanges = false;
 
     FileReader fileReader = null;
@@ -423,10 +437,25 @@ public class Gui extends Application {
       // Background image
       line = reader.readLine();
       if (line != null && !line.isBlank()) {
-        String filePath = line.split(":")[1].trim();
-        mapFile = new File(filePath);
-        BackgroundImage backgroundImage = fileToBackgroundImage(mapFile);
-        setBackground((VBox) stage.getScene().getRoot(), backgroundImage);
+        String fileName = line.split(":", 2)[1].trim();
+
+        // Resolve image path relative to the selected .graph file
+        File imageFile = new File(selectedFile.getParentFile(), fileName);
+        mapFile = imageFile;
+
+        try {
+          Image image = new Image(imageFile.toURI().toString());
+          mapImageView.setImage(image);
+
+          mapPane.getChildren().add(mapImageView);
+
+          // Adjust window size to image
+          Stage primaryStage = (Stage) mapPane.getScene().getWindow();
+          primaryStage.setWidth(image.getWidth() + 40);
+          primaryStage.setHeight(image.getHeight() + 100);
+        } catch (Exception ex) {
+          showAlert("Error", "Kunde inte ladda kartbilden: " + ex.getMessage());
+        }
       }
 
       // Places
@@ -506,6 +535,7 @@ public class Gui extends Application {
         }
       }
     }
+    enableAllButtons(); // Aktivera knappar efter inläsning
   }
 
   private void saveHandler(Stage stage) {
@@ -519,7 +549,7 @@ public class Gui extends Application {
       selectedFile = new File(selectedFile.getAbsolutePath() + ".graph");
       StringBuilder sb = new StringBuilder();
       // Add map file URI
-      sb.append(mapFile.toURI().toString()).append("\n");
+      sb.append("file:").append(mapFile.getName()).append("\n");
 
       // Add places
       for (PlaceView pv : places) {
@@ -595,29 +625,6 @@ public class Gui extends Application {
     }
   }
 
-  // private BackgroundImage fileToBackgroundImage(File selectedFile) {
-  // String url = selectedFile.toURI().toString();
-  // Image image = new Image(url);
-  // double width = image.getWidth();
-  // double height = image.getHeight();
-  // BackgroundSize backgroundSize = new BackgroundSize(width, height, false,
-  // false, true, false);
-  // BackgroundImage backgroundImage = new BackgroundImage(image, null, null,
-  // null, backgroundSize);
-  // return backgroundImage;
-  // }
-
-  // private void setBackground(VBox root, BackgroundImage backgroundImage) {
-  // double width = backgroundImage.getSize().getWidth();
-  // double height = backgroundImage.getSize().getHeight();
-
-  // root.setBackground(new javafx.scene.layout.Background(backgroundImage));
-  // Stage stage = (Stage) root.getScene().getWindow();
-  // stage.setWidth(width);
-  // stage.setHeight(height);
-  // stage.setResizable(false);
-  // }
-
   private void handleExit() {
     if (hasUnsavedChanges) {
       Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -636,6 +643,24 @@ public class Gui extends Application {
       System.exit(0); // Inga ändringar → avsluta direkt
     }
 
+  }
+
+  // Inaktiverar alla knappar
+  private void disableAllButtons() {
+    newPlaceButton.setDisable(true);
+    newConnectionButton.setDisable(true);
+    showConnectionButton.setDisable(true);
+    changeConnectionButton.setDisable(true);
+    findPathButton.setDisable(true);
+  }
+
+  // Aktiverar knapparna
+  private void enableAllButtons() {
+    newPlaceButton.setDisable(false);
+    newConnectionButton.setDisable(false);
+    showConnectionButton.setDisable(false);
+    changeConnectionButton.setDisable(false);
+    findPathButton.setDisable(false);
   }
 
   private void showAlert(String title, String message) {
