@@ -24,15 +24,12 @@ public class ListGraph<N> implements Graph<N> {
     if (current.equals(target)) {
       return true;
     }
-
     visited.add(current);
 
     for (Edge<N> edge : adjacencyList.get(current)) {
       N neighbour = edge.getDestination();
-
       if (!visited.contains(neighbour)) {
         path.add(edge); // Lägg till kant innan rekursion
-
         if (dfsPath(neighbour, target, visited, path)) {
           return true;
         }
